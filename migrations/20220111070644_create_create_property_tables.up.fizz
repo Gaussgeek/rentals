@@ -1,0 +1,7 @@
+create_table("property") {
+	t.Column("id", "integer", {primary: true})
+	t.Column("property_name", "string", {"default": ""})
+	t.Column("property_location", "string", {"default": ""})
+	t.Column("owner_id", "integer", {})
+	t.Timestamps()
+}

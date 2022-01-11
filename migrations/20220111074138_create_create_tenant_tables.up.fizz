@@ -1,0 +1,17 @@
+create_table("tenant") {
+	t.Column("id", "integer", {primary: true})
+	t.Column("first_name", "string", {"default": ""})
+	t.Column("last_name", "string", {"default": ""})
+	t.Column("email", "string", {})
+	t.Column("phone", "string", {})
+	t.Column("other_phone", "string", {})
+	t.Column("alternate_contact_name", "string", {})
+	t.Column("alternate_contact_phone", "string", {})
+	t.Column("risk_id", "int", {})
+	t.Column("risk_name", "string", {})
+	t.Column("unit_id", "int", {})
+	t.Column("date_of_occupancy", "date", {})
+	t.Column("exit_date", "date", {})
+	t.Column("invoice_id", "int", {})
+	t.Timestamps()
+}

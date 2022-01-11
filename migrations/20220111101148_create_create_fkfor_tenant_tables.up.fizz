@@ -1,0 +1,4 @@
+add_foreign_key("tenant", "risk_id", {"risk" : ["id"]}, {
+    "on_delete" : "cascade",
+    "on_update" : "cascade",
+})

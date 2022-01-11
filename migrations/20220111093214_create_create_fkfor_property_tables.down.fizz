@@ -1,0 +1,1 @@
+drop_foreign_key("property", "property_users_id_fk", {})

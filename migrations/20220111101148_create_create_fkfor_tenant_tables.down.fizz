@@ -1,0 +1,1 @@
+drop_foreign_key("tenant", "tenant_risk_id_fk", {})

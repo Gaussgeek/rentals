@@ -1,0 +1,11 @@
+create_table("expenses") {
+	t.Column("id", "integer", {primary: true})
+	t.Column("expense_name", "string", {"default": ""})
+	t.Column("unit_id", "int", {})
+	t.Column("amount_paid", "int", {})
+	t.Column("date_paid", "date", {})
+	t.Column("narration", "string", {})
+	t.Column("amount_due", "int", {})
+	t.Column("due_date", "int", {})
+	t.Timestamps()
+}

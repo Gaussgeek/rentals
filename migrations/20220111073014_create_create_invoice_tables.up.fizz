@@ -1,0 +1,11 @@
+create_table("invoice") {
+	t.Column("id", "integer", {primary: true})
+	t.Column("invoice_name", "string", {"default": ""})
+	t.Column("unit_id", "int", {})
+	t.Column("monthly_amount", "int", {})
+	t.Column("amount_paid", "int", {})
+	t.Column("date_paid", "date", {})
+	t.Column("amount_due", "int", {})
+	t.Column("due_date", "int", {})
+	t.Timestamps()
+}

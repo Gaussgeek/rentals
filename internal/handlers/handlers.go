@@ -59,6 +59,40 @@ func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "contact.page.tmpl", &models.TemplateData{})
 }
 
+// SignUp renders the signup page
+func (m *Repository) SignUp(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, r, "signup.page.tmpl", &models.TemplateData{
+		Form: forms.New(nil),
+	})
+}
+
+// PostSignUp renders the signup page
+func (m *Repository) PostSignUp(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.RenewToken(r.Context())
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	first_name := r.Form.Get("first_name")
+	last_name := r.Form.Get("last_name")
+	email := r.Form.Get("email")
+	password := r.Form.Get("password")
+
+	form := forms.New(r.PostForm)
+	form.Required("first_name", "last_name", "email", "password")
+	form.IsEmail("email")
+
+	if !form.Valid() {
+		render.Template(w, r, "signup.page.tmpl", &models.TemplateData{
+			Form: form,
+		})
+		return
+	}
+
+}
+
 // ShowLogin shows the login screen
 func (m *Repository) ShowLogin(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "login.page.tmpl", &models.TemplateData{
@@ -108,7 +142,6 @@ func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
-
 
 func (m *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "admin-dashboard.page.tmpl", &models.TemplateData{})
