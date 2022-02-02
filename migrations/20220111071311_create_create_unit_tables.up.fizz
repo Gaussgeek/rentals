@@ -2,9 +2,6 @@ create_table("unit") {
 	t.Column("id", "integer", {primary: true})
 	t.Column("unit_name", "string", {"default": ""})
 	t.Column("property_id", "int", {})
-	t.Column("tenant_id", "int", {})
-	t.Column("expense_id", "int", {})
-	t.Column("expense_name", "string", {"default": ""})
-	t.Column("occupancy_status", "boolean", {})
+	t.Column("occupancy_status", "boolean", {"default": "false"})
 	t.Timestamps()
 }

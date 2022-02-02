@@ -1,4 +1,1 @@
-add_foreign_key("invoice", "unit_id", {"unit" : ["id"]}, {
-    "on_delete" : "cascade",
-    "on_update" : "cascade",
-})
+add_foreign_key("invoice", "unit_id", {"unit": ["id"]}, {"on_delete": "cascade", "on_update": "cascade"})

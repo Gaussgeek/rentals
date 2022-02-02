@@ -1,0 +1,3 @@
+add_foreign_key("expenses", "unit_id", {"unit": ["id"]}, {
+"on_delete": "cascade", 
+"on_update": "cascade"})

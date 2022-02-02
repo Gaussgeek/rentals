@@ -54,7 +54,8 @@ func main() {
 
 func run() (*driver.DB, error) {
 	// what am I going to put in the session
-	gob.Register(models.User{})
+	gob.Register(models.Users{})
+	gob.Register(models.Property{})
 	gob.Register(map[string]int{})
 
 	// read flags

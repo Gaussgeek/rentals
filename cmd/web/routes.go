@@ -18,7 +18,7 @@ func routes(app *config.AppConfig) http.Handler {
 
 	mux.Get("/", handlers.Repo.Home)
 	mux.Get("/about/", handlers.Repo.About)
-	
+
 	mux.Get("/contact", handlers.Repo.Contact)
 
 	mux.Get("/user/signup", handlers.Repo.SignUp)
@@ -35,10 +35,19 @@ func routes(app *config.AppConfig) http.Handler {
 		//mux.Use(Auth)
 		mux.Get("/dashboard", handlers.Repo.AdminDashboard)
 
-		
+		mux.Get("/add-new-property", handlers.Repo.AdminAddNewProperty)
+		mux.Post("/add-new-property", handlers.Repo.AdminPostAddNewProperty)
+
+		mux.Get("/all-properties", handlers.Repo.AdminAllPropertiesByID)
+		mux.Get("/all-properties/{id}/show", handlers.Repo.AdminShowPropertyByPropertyID)
+
+		mux.Get("/all-properties/{id}/add-unit", handlers.Repo.AdminAddUnitToProperty)
+		mux.Post("/all-properties/{id}/add-unit", handlers.Repo.AdminPostAddUnitToProperty)
+
+		mux.Get("/all-properties/{id}/view-units", handlers.Repo.AdminShowUnitsByPropertyID)
+
+		mux.Get("/unit-details/{id}/show", handlers.Repo.AdminShowUnitDetails)
 	})
 
 	return mux
 }
-
-

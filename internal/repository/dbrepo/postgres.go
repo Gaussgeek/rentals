@@ -13,8 +13,32 @@ func (m *postgresDBRepo) AllUsers() bool {
 	return true
 }
 
+//InsertNewUser adds a new user in the database
+func (m *postgresDBRepo) InsertNewUser(r models.Users) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `insert into users (first_name, last_name, email, password, created_at, updated_at)
+			values ($1, $2, $3, $4, $5, $6)`
+
+	_, err := m.DB.ExecContext(ctx, stmt,
+		r.FirstName,
+		r.LastName,
+		r.Email,
+		r.Password,
+		r.CreatedAt,
+		r.UpdatedAt,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetUserByID returns a user by id
-func (m *postgresDBRepo) GetUserByID(id int) (models.User, error) {
+func (m *postgresDBRepo) GetUserByID(id int) (models.Users, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -23,7 +47,7 @@ func (m *postgresDBRepo) GetUserByID(id int) (models.User, error) {
 
 	row := m.DB.QueryRowContext(ctx, query, id)
 
-	var u models.User
+	var u models.Users
 	err := row.Scan(
 		&u.ID,
 		&u.FirstName,
@@ -42,21 +66,25 @@ func (m *postgresDBRepo) GetUserByID(id int) (models.User, error) {
 	return u, nil
 }
 
-// UpdateUser updates a user in the database
-func (m *postgresDBRepo) UpdateUser(u models.User) error {
+// UpdateUser updates a user in the database for a given ID
+func (m *postgresDBRepo) UpdateUser(u models.Users) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	query := `
-		update users set first_name = $1, last_name = $2, email = $3, access_level = $4, updated_at = $5
+		update users set first_name = $1, last_name = $2, email = $3, phone =$4 access_level = $5, updated_at = $6
+		where id = $7
 `
 
 	_, err := m.DB.ExecContext(ctx, query,
 		u.FirstName,
 		u.LastName,
 		u.Email,
+		u.Phone,
 		u.AccessLevel,
 		time.Now(),
+
+		u.ID,
 	)
 
 	if err != nil {
@@ -65,6 +93,7 @@ func (m *postgresDBRepo) UpdateUser(u models.User) error {
 
 	return nil
 }
+
 
 // Authenticate authenticates a user
 func (m *postgresDBRepo) Authenticate(email, testPassword string) (int, string, error) {
@@ -90,9 +119,301 @@ func (m *postgresDBRepo) Authenticate(email, testPassword string) (int, string, 
 	return id, hashedPassword, nil
 }
 
+// DeleteUserByID deletes a user from the database
+func (m *postgresDBRepo) DeleteUserByID(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	
+	query := `delete from users where id = $1`
+
+	_, err := m.DB.ExecContext(ctx, query, id)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// AddNewProperty adds a new property to the database
+func (m *postgresDBRepo) AddNewProperty(p models.Property) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `insert into property (property_name, property_location, owner_id, created_at, updated_at)
+			 values ($1, $2, $3, $4, $5)`
+	
+	 _, err := m.DB.ExecContext(ctx, query,
+				p.PropertyName,
+				p.PropertyLocation,
+				p.OwnerID,
+				p.CreatedAt,
+				p.UpdatedAt,
+	 )
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetPropertiesByOwnwerID returns all properties with the same owner_id
+func (m *postgresDBRepo)GetPropertiesByOwnwerID(id int) ([]models.Property, error)  {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var properties []models.Property
+
+	query := `select id, property_name, property_location, owner_id, created_at, updated_at
+			from property where owner_id = $1`
+	
+	rows, err := m.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var p models.Property
+		err := rows.Scan(
+			&p.ID,
+			&p.PropertyName,
+			&p.PropertyLocation,
+			&p.OwnerID,
+			&p.CreatedAt,
+			&p.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		properties = append(properties, p)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return properties, nil
+}
+
 func (m *testDBRepo) Authenticate(email, testPassword string) (int, string, error) {
 	if email == "me@here.ca" {
 		return 1, "", nil
 	}
 	return 0, "", errors.New("some error")
 }
+
+func (m *postgresDBRepo) GetPropertyByPropertyID(id int) (models.Property, error)  {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id, property_name, property_location, owner_id, created_at, updated_at
+			from property where id = $1`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	var p models.Property
+	err := row.Scan(
+				&p.ID,
+				&p.PropertyName,
+				&p.PropertyLocation,
+				&p.OwnerID,
+				&p.CreatedAt,
+				&p.UpdatedAt,
+			)
+		
+	if err != nil {
+			return p, err
+ 		  }
+		
+	return p, nil
+}
+
+func (m *postgresDBRepo) InsertNewUnit(u models.Unit) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `insert into unit (unit_name, property_id,  occupancy_status, created_at, updated_at) 
+			values ($1, $2, $3, $4, $5)`
+
+	_, err := m.DB.ExecContext(ctx, stmt, 
+			u.UnitName,
+			u.PropertyID,
+			u.OccupancyStatus,
+			u.CreatedAt,
+			u.UpdatedAt,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *postgresDBRepo) GetUnitsByPropertyID(id int) ([]models.Unit, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var units []models.Unit
+
+	query := `select id, unit_name, property_id, occupancy_status,
+			  created_at, updated_at from unit where property_id = $1`
+	
+	rows, err := m.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, err
+			  }
+	defer rows.Close()
+		  
+	for rows.Next() {
+		var u models.Unit
+		err := rows.Scan(
+				  &u.ID,
+				  &u.UnitName,
+				  &u.PropertyID,
+				  &u.OccupancyStatus,
+				  &u.CreatedAt,
+				  &u.UpdatedAt,
+				  )
+    	if err != nil {
+			return nil, err
+		}
+		  
+		units = append(units, u)
+			
+	}
+
+	if err = rows.Err(); err != nil {
+	 return nil, err
+ 	}
+
+	return units, nil
+}
+
+func (m *postgresDBRepo) GetUnitByUnitID(id int) (models.Unit, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id, unit_name, property_id, occupancy_status, created_at, updated_at
+			from unit where id = $1`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	var u models.Unit
+
+	err := row.Scan(
+		&u.ID,
+		&u.UnitName,
+		&u.PropertyID,
+		&u.OccupancyStatus,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
+
+	if err != nil {
+		return u, err
+	}
+
+	return u, nil
+}
+
+func (m *postgresDBRepo) GetTenantByUnitID(id int) (models.Tenant, error){
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id, first_name, last_name, email, phone,  
+				risk_id, unit_id, date_of_occupancy, exit_date, invoice_id,
+				created_at, updated_at
+			from tenant where unit_id = $1`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	var u models.Tenant
+
+	err := row.Scan(
+		&u.ID,
+		&u.FirstName,
+		&u.LastName,
+		&u.Email,
+		&u.Phone,
+		&u.RiskID,
+		&u.UnitID,
+		&u.DateOfOccupancy,
+		&u.ExitDate,
+		&u.InvoiceID,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
+
+	if err != nil {
+		return u, err
+	}
+
+	return u, nil
+}
+
+func (m *postgresDBRepo) GetInvoiceByUnitID(id int) (models.Invoice, error){
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id, invoice_name, unit_id, monthly_amount, amount_paid, date_paid,
+			amount_due, due_date, created_at, updated_at
+			from invoice where unit_id = $1`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	var u models.Invoice
+
+	err := row.Scan(
+		&u.ID,
+		&u.InvoiceName,
+		&u.UnitID,
+		&u.MonthlyAmount,
+		&u.AmountReceived,
+		&u.DatePaid,
+		&u.AmountDue,
+		&u.DateDue,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
+
+	if err != nil {
+		return u, err
+	}
+
+	return u, nil
+}
+
+func (m *postgresDBRepo) GetExpenseByUnitID(id int) (models.Expenses, error){
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id, expense_name, unit_id, amount_paid, date_paid, narration, amount_due,
+			due_date, created_at, updated_at
+			from expenses where unit_id = $1`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	var u models.Expenses
+
+	err := row.Scan(
+		&u.ID,
+		&u.ExpenseName,
+		&u.UnitID,
+		&u.AmountPaid,
+		&u.DatePaid,
+		&u.Narration,
+		&u.AmountDue,
+		&u.DueDate,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
+
+	if err != nil {
+		return u, err
+	}
+
+	return u, nil
+}
+

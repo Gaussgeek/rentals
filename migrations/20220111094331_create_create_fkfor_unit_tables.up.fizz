@@ -1,4 +1,1 @@
-add_foreign_key("unit", "property_id", {"property" : ["id"]}, {
-    "on_delete" : "cascade",
-    "on_update" : "cascade",
-})
+add_foreign_key("unit", "property_id", {"property": ["id"]}, {"on_delete": "cascade", "on_update": "cascade"})

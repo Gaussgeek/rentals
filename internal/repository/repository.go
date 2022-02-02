@@ -6,13 +6,24 @@ import (
 
 // DatabaseRepo is the list of all functions working on the database
 type DatabaseRepo interface {
-	
 	AllUsers() bool
 
-	GetUserByID(id int) (models.User, error)
-	UpdateUser(u models.User) error
+	InsertNewUser(r models.Users) error
+
+	GetUserByID(id int) (models.Users, error)
+	UpdateUser(u models.Users) error
 	Authenticate(email, testPassword string) (int, string, error)
 
-	
-	
+	AddNewProperty(p models.Property) error
+	GetPropertiesByOwnwerID(id int) ([]models.Property, error)
+
+	GetPropertyByPropertyID(id int) (models.Property, error)
+
+	InsertNewUnit(models.Unit) error
+
+	GetUnitsByPropertyID(id int) ([]models.Unit, error)
+
+	GetUnitByUnitID(id int) (models.Unit, error)
+	GetTenantByUnitID(id int) (models.Tenant, error)
+	GetInvoiceByUnitID(id int) (models.Invoice, error)
 }

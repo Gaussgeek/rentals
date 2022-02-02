@@ -5,7 +5,7 @@ import (
 )
 
 // User is the user model
-type User struct {
+type Users struct {
 	ID          int
 	FirstName   string
 	LastName    string
@@ -27,15 +27,12 @@ type Property struct {
 }
 
 type Unit struct {
-	ID             int
-	UnitName       string
-	Property       Property
-	TenantID       int
-	Invoice        Invoice
-	Expenses       Expenses
-	OccupacyStatus bool
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID              int
+	UnitName        string
+	PropertyID      int
+	OccupancyStatus bool
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 type Invoice struct {
@@ -60,11 +57,11 @@ type Tenant struct {
 	OtherPhone                  string
 	AlternateContactPersonName  string
 	AlternateContactPersonPhone string
-	Risk                        Risk
+	RiskID                      int
 	UnitID                      Unit
 	DateOfOccupancy             time.Time
 	ExitDate                    time.Time
-	Invoice                     Invoice
+	InvoiceID                   int
 	CreatedAt                   time.Time
 	UpdatedAt                   time.Time
 }

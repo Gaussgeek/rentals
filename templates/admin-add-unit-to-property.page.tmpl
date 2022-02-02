@@ -1,0 +1,73 @@
+{{template "admin" .}}
+
+{{define "page-title"}}
+   
+{{end}}
+
+
+{{define "content"}}
+
+<div id="add-unit-to-property-page" class="basic-1 bg-gray">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                {{$prop := index .Data "property"}}
+                <form action="/admin/all-properties/{{$prop.ID}}/add-unit" method="post" class="" validate>
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <input type="hidden" name="property_id" value='{{$prop.ID}}'>
+                    
+                    <h2 class="text-center" style="padding-left: 6em;">New Unit</h2>
+
+                    <div class="form-group mt-3">
+                        <label for="property_id">Property ID:</label>
+                      
+                                  
+                        <input class="form-control disabled"
+                               id="property_id" autocomplete="off" type='text'
+                               name='property_id' value="{{$prop.ID}}" disabled>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="property_name">Property Name:</label>
+                        
+                        <input class="form-control"
+                               id="property_name" autocomplete="off" type='text'
+                               name='property_name' value="{{$prop.PropertyName}}" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="property_location">Property Location:</label>
+   
+                        <input class="form-control"
+                               id="property_location" autocomplete="off" type='text'
+                               name='property_location' value="{{$prop.PropertyLocation}}" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="unit_name">Unit Name</label>:</label>
+                        
+                        <input class="form-control"
+                               id="unit_name" autocomplete="off" type='text'
+                               name='unit_name' value="" required>
+                    </div>
+
+                    <hr>
+                    <input type="submit" class="btn btn-primary" value="Submit">
+
+                    <div class="float-right">
+                        <a href="#!" class="btn btn-danger" onclick="window.history.go(-1)">Cancel</a>
+                    </div>
+                    <div class="clearfix"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{end}}
+
+{{define "js"}}
+    <script>
+
+    </script>
+{{end}}

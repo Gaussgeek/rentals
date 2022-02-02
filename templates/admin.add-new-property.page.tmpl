@@ -1,0 +1,46 @@
+{{template "admin" .}}
+
+{{define "page-title"}}
+   
+{{end}}
+
+{{define "content"}}
+<div id="add-new-property-page" class="basic-1 bg-gray">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                {{$ID := index .IntMap "user_id"}}
+                <form action="/admin/add-new-property" method="post" class="" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <input type="hidden" name="owner_id" value='{{$ID}}'>
+                    
+                    <h1 class="text-center">Add A New Property</h1>
+
+                    <div class="form-group mt-3">
+                        <label for="property_name">Property Name:</label>
+                        {{with .Form.Errors.Get "property_name"}}
+                            <label class="text-danger">{{.}}</label>
+                        {{end}}
+                        <input class="form-control {{with .Form.Errors.Get "property_name"}} is-invalid {{end}}"
+                               id="property_name" autocomplete="off" type='text'
+                               name='property_name' value="" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="property_location">Property Location:</label>
+                        {{with .Form.Errors.Get "property_location"}}
+                            <label class="text-danger">{{.}}</label>
+                        {{end}}
+                        <input class="form-control {{with .Form.Errors.Get "property_location"}} is-invalid {{end}}"
+                               id="property_location" autocomplete="off" type='text'
+                               name='property_location' value="" required>
+                    </div>
+
+                    <hr>
+                    <input type="submit" class="btn btn-primary" value="Submit">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

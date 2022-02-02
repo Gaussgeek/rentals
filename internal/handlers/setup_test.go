@@ -32,7 +32,7 @@ var functions = template.FuncMap{
 
 func TestMain(m *testing.M) {
 	
-	gob.Register(models.User{})
+	gob.Register(models.Users{})
 	gob.Register(map[string]int{})
 
 	// change this to true when in production

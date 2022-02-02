@@ -1,0 +1,1 @@
+add_index("invoice", ["date_paid", "due_date"], {})

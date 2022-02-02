@@ -2,10 +2,100 @@
 
 {{define "content"}}
 
-<div class="container">
-    <h1>This is some home page data </h1>
-</div>
+    <!-- Header -->
+      <header id="header" class="header">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="text-container">
+                        <h1 class="h1-large">The #1 app for <span class="replace-me">residential, commercial, large scale properties</span></h1>
+                        <p class="p-large">Managing all your properties has never been easier or more efficient. In one place.</p>
+                        <a class="btn-solid-lg" href="/user/signup">Sign up Now</a>
+                    </div> <!-- end of text-container -->
+                </div> <!-- end of col -->
+                <div class="col-lg-6">
+                    <div class="image-container">
+                        <img class="img-fluid" src="/static/images/real_estate.jpeg" alt="">
+                    </div> <!-- end of image-container -->
+                </div> <!-- end of col -->
+            </div> <!-- end of row -->
+        </div> <!-- end of container -->
+    </header> <!-- end of header -->
+    <!-- end of header -->
 
+    <!-- Features -->
+    <div id="features" class="cards-1">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h2 class="h2-heading">Property Manager is packed with <span>awesome features</span></h2>
+                </div> <!-- end of col -->
+            </div> <!-- end of row -->
+            <div class="row">
+                <div class="col-lg-12">
+                    
+                    <!-- Card -->
+                    <div class="card">
+                        <div class="card-icon">
+                            <span class="fas fa-headphones-alt"></span>
+                        </div>
+                        <div class="card-body">
+                            <h4 class="card-title">Tenant Lists</h4>
+                            <p>Register all your property, units and the tenants in each.</p>
+                        </div>
+                    </div>
+                    <!-- end of card -->
 
+                    <!-- Card -->
+                    <div class="card">
+                        <div class="card-icon green">
+                            <span class="far fa-clipboard"></span>
+                        </div>
+                        <div class="card-body">
+                            <h4 class="card-title">Rent and Expenses Tracking</h4>
+                            <p>Track all the rent & expenses: paid, due, defaulters</p>
+                        </div>
+                    </div>
+                    <!-- end of card -->
+
+                    <!-- Card -->
+                    <div class="card">
+                        <div class="card-icon blue">
+                            <span class="far fa-comments"></span>
+                        </div>
+                        <div class="card-body">
+                            <h4 class="card-title">Reporting Tool</h4>
+                            <p>Get notified when major decisions have to be made. From Planned maintenance to preparing for new tenants.</p>
+                        </div>
+                    </div>
+                    <!-- end of card -->
+
+                </div> <!-- end of col -->
+            </div> <!-- end of row -->
+        </div> <!-- end of container -->
+    </div> <!-- end of cards-1 -->
+    <!-- end of services -->
+
+     <!-- Details 1 -->
+     <div id="details" class="basic-1 bg-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-xl-5">
+                    <div class="text-container">
+                        <h2>Manage your properties, save more and earn more.</h2>
+                        <p>You can now plan better, get instant notifications.</p>                
+                    </div> <!-- end of text-container -->
+                </div> <!-- end of col -->
+                <div class="col-lg-6 col-xl-7">
+                    <div class="image-container">
+                        <img class="img-fluid" src="images/details-1.svg" alt="">
+                    </div> <!-- end of image-container -->
+                </div> <!-- end of col -->
+            </div> <!-- end of row -->
+        </div> <!-- end of container -->
+    </div> <!-- end of basic-1 -->
+    <!-- end of details 1 -->
+
+    
 
 {{end}}
