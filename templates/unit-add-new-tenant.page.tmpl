@@ -1,0 +1,110 @@
+{{template "unit" .}}
+
+{{define "css"}}
+    
+{{end}}
+
+{{define "page-title"}}
+   <div style="padding-left: 5em;">
+       Add A New Tenant
+   </div> 
+{{end}}
+
+{{define "content"}}
+<div id="add-tenant-to-unit-page" class="basic-1 bg-gray">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                {{$id := index .IntMap "unit_id"}}
+                <form action="/admin/unit-details/{{$id}}/add-new-tenant" method="post" class="row g-3" validate>
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <input type="hidden" name="unit_id" value="{{$id}}">
+             
+                    <div class="col-md-6">
+                        <label for="first_name" class="form-label">First Name</label>
+                                                        
+                        <input class="form-control"
+                               id="first_name" autocomplete="off" type='text'
+                               name='first_name' value="" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="last_name" class="form-label">Last Name</label>
+                                                        
+                        <input class="form-control"
+                               id="last_name" autocomplete="off" type='text'
+                               name='last_name' value="" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="email" class="form-label">Email</label>
+                        
+                        <input class="form-control"
+                               id="email" autocomplete="off" type='email'
+                               name='email' value="" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="phone" class="form-label">Phone</label>
+                                                        
+                        <input class="form-control"
+                               id="phone" autocomplete="off" type='text'
+                               name='phone' value="" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="other_phone" class="form-label">Other Phone</label>
+                                                        
+                        <input class="form-control"
+                               id="other_phone" autocomplete="off" type='text'
+                               name='other_phone' value="" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="other_contact_name" class="form-label">Other Contact Name</label>
+                                                        
+                        <input class="form-control"
+                               id="other_contact_name" autocomplete="off" type='text'
+                               name='other_contact_name' value="" required  >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="other_contact_phone" class="form-label">Other Contact Phone</label>
+                                                        
+                        <input class="form-control"
+                               id="other_contact_phone" autocomplete="off" type='text'
+                               name='other_contact_phone' value="" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="date_of_occupancy" class="form-label">Date Of Occupancy</label>
+                                                        
+                        <input class="form-control"
+                               id="date_of_occupancy" autocomplete="off" type='date'
+                               name='date_of_occupancy' value="" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="exit_date" class="form-label">Exit Date</label>
+                                                        
+                        <input class="form-control"
+                               id="exit_date" autocomplete="off" type='date'
+                               name='exit_date' value="" required>
+                    </div>
+                               
+                    <hr>
+                    
+                    <input type="submit" class="btn btn-primary" value="Submit">
+
+                    <div class="float-right">
+                        <a href="#!" class="btn btn-danger" onclick="window.history.go(-1)">Cancel</a>
+                    </div>
+                    <div class="clearfix"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{{end}}

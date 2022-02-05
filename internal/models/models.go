@@ -58,7 +58,7 @@ type Tenant struct {
 	AlternateContactPersonName  string
 	AlternateContactPersonPhone string
 	RiskID                      int
-	UnitID                      Unit
+	UnitID                      int
 	DateOfOccupancy             time.Time
 	ExitDate                    time.Time
 	InvoiceID                   int

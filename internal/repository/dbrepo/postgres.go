@@ -251,6 +251,39 @@ func (m *postgresDBRepo) InsertNewUnit(u models.Unit) error {
 	return nil
 }
 
+func (m *postgresDBRepo) InsertNewTenant(u models.Tenant) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `insert into tenant 
+			(first_name, last_name, email, phone, other_phone, alternate_contact_name, alternate_contact_phone, risk_id, unit_id,
+				date_of_occupancy, exit_date, invoice_id, created_at, updated_at)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`
+	
+	_, err := m.DB.ExecContext(ctx, stmt, 
+				u.FirstName,
+				u.LastName,
+				u.Email,
+				u.Phone,
+				u.OtherPhone,
+				u.AlternateContactPersonName,
+				u.AlternateContactPersonPhone,
+				u.RiskID,
+				u.UnitID,
+				u.DateOfOccupancy,
+				u.ExitDate,
+				u.InvoiceID,
+				u.CreatedAt,
+				u.UpdatedAt,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *postgresDBRepo) GetUnitsByPropertyID(id int) ([]models.Unit, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -322,7 +355,7 @@ func (m *postgresDBRepo) GetTenantByUnitID(id int) (models.Tenant, error){
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `select id, first_name, last_name, email, phone,  
+	query := `select id, first_name, last_name, email, phone, other_phone, alternate_contact_name, alternate_contact_phone, 
 				risk_id, unit_id, date_of_occupancy, exit_date, invoice_id,
 				created_at, updated_at
 			from tenant where unit_id = $1`
@@ -337,6 +370,9 @@ func (m *postgresDBRepo) GetTenantByUnitID(id int) (models.Tenant, error){
 		&u.LastName,
 		&u.Email,
 		&u.Phone,
+		&u.OtherPhone,
+		&u.AlternateContactPersonName,
+		&u.AlternateContactPersonPhone,
 		&u.RiskID,
 		&u.UnitID,
 		&u.DateOfOccupancy,
@@ -417,3 +453,53 @@ func (m *postgresDBRepo) GetExpenseByUnitID(id int) (models.Expenses, error){
 	return u, nil
 }
 
+func (m *postgresDBRepo) UpdateTenant(u models.Tenant) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `update tenant set 
+				first_name = $1, last_name=$2, email=$3, phone=$4, other_phone=$5, alternate_contact_name=$6, alternate_contact_phone=$7, risk_id=$8, unit_id=$9,
+				date_of_occupancy=$10, exit_date=$11, invoice_id=$12, created_at=$13, updated_at=$14
+				where id = $15`
+
+	_, err := m.DB.ExecContext(ctx, query, 
+		u.FirstName,
+		u.LastName,
+		u.Email,
+		u.Phone,
+		u.OtherPhone,
+		u.AlternateContactPersonName,
+		u.AlternateContactPersonPhone,
+		u.RiskID,
+		u.UnitID,
+		u.DateOfOccupancy,
+		u.ExitDate,
+		u.InvoiceID,
+		u.CreatedAt,
+		u.UpdatedAt,
+		
+		u.ID,
+	
+		)	
+
+		if err != nil {
+			return err
+		}
+	
+		return nil
+}
+
+
+func (m *postgresDBRepo) DeleteTenant(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := "delete from tenant where id = $1"
+
+	_, err := m.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

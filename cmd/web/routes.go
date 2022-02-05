@@ -47,6 +47,13 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Get("/all-properties/{id}/view-units", handlers.Repo.AdminShowUnitsByPropertyID)
 
 		mux.Get("/unit-details/{id}/show", handlers.Repo.AdminShowUnitDetails)
+		mux.Get("/unit-details/{id}/add-new-tenant", handlers.Repo.AdminAddTenantByUnitID)
+		mux.Post("/unit-details/{id}/add-new-tenant", handlers.Repo.AdminPostAddTenantByUnitID)
+
+		mux.Post("/unit-details/{id}/update-tenant/{id}", handlers.Repo.AdminUpdateTenantByID)
+		mux.Get("/delete-tenant/{id}/{id}", handlers.Repo.AdminDeleteTenant)
+		
+		mux.Get("/unit-details/{id}/view-tenants", handlers.Repo.AdminShowTenantDetails)
 	})
 
 	return mux

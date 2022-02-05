@@ -67,3 +67,15 @@ func (m *testDBRepo) GetExpenseByUnitID(id int) (models.Expenses, error) {
 	var exp models.Expenses
 	return exp, nil
 }
+
+func (m *testDBRepo)InsertNewTenant(u models.Tenant) error {
+		return nil
+}
+
+func (m *testDBRepo)UpdateTenant(u models.Tenant) error {
+	return nil
+}
+
+func (m *testDBRepo) DeleteTenant(id int) error {
+	return nil
+}

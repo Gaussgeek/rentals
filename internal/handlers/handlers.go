@@ -427,7 +427,255 @@ func (m *Repository) AdminShowUnitDetails(w http.ResponseWriter, r *http.Request
 	data := make(map[string]interface{})
 	data["unit"] = unit
 
-	render.Template(w, r, "admin-all-units-on-property.page.tmpl", &models.TemplateData{
+	render.Template(w, r, "admin-unit-details.page.tmpl", &models.TemplateData{
 		Data: data,
 	})
+}
+
+// AdminAddTenantByUnitID adds a new tenant to a unit
+func (m *Repository) AdminAddTenantByUnitID(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	
+	intmap := make(map[string]int)
+	intmap["unit_id"] = unit_id
+	
+	render.Template(w, r, "unit-add-new-tenant.page.tmpl", &models.TemplateData{
+		Form: forms.New(nil),
+		IntMap: intmap,
+	})
+}
+
+// AdminPostAddTenantByUnitID is the post handler for adding tenant to unit
+func (m *Repository) AdminPostAddTenantByUnitID(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.RenewToken(r.Context())
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("first_name", "last_name", "phone", "email", "date_of_occupancy", "unit_id")
+
+	if !form.Valid() {
+		render.Template(w, r, "unit-add-new-tenant.page.tmpl", &models.TemplateData{
+			Form: form,
+		})
+		return
+	}
+
+	unit_id, err := strconv.Atoi(r.Form.Get("unit_id"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+
+	sd := r.Form.Get("date_of_occupancy")
+	ed := r.Form.Get("exit_date")
+
+	layout := "2006-01-02"
+
+	date_of_occupancy, err := time.Parse(layout, sd)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse start date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	exit_date, err := time.Parse(layout, ed)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse end date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+
+	NewTenant := models.Tenant{
+		FirstName:  r.Form.Get("first_name"),
+		LastName: r.Form.Get("last_name"),
+		Email: r.Form.Get("email"),
+		Phone: r.Form.Get("phone"),
+		OtherPhone: r.Form.Get("other_phone"),
+		AlternateContactPersonName: r.Form.Get("other_contact_name"),
+		AlternateContactPersonPhone: r.Form.Get("other_contact_phone"),
+		RiskID: 1,
+		UnitID: unit_id,
+		DateOfOccupancy: date_of_occupancy,
+		ExitDate: exit_date,
+		InvoiceID: 1,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	fmt.Println(NewTenant)
+
+	err = m.DB.InsertNewTenant(NewTenant)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't insert tenant into database!")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusSeeOther)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Successfully added new tenant to the database.")
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+}
+
+// AdminShowTenantDetails displays tenant details
+func (m *Repository) AdminShowTenantDetails(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	
+	intmap := make(map[string]int)
+	intmap["unit_id"] = unit_id
+
+	tenant, err := m.DB.GetTenantByUnitID(unit_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["tenant"] = tenant
+	
+	render.Template(w, r, "admin-view-tenant.page.tmpl", &models.TemplateData{
+		Form: forms.New(nil),
+		IntMap: intmap,
+		Data: data,
+	})
+}
+
+// AdminDeleteTenant deletes a tenant from a database
+func (m *Repository) AdminDeleteTenant(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	tenant_id, err := strconv.Atoi(exploded[4])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	err = m.DB.DeleteTenant(tenant_id)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't delete tenant from database!")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/view-tenants", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "success", "Deleted Tenant from database.")
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+}
+
+// AdminUpdateTenantByID updates a tenant by tenant ID
+func (m *Repository) AdminUpdateTenantByID(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.RenewToken(r.Context())
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("first_name", "last_name", "phone", "email", "date_of_occupancy", "unit_id")
+
+	if !form.Valid() {
+		render.Template(w, r, "admin-view-tenant.page.tmpl", &models.TemplateData{
+			Form: form,
+		})
+		return
+	}
+	
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	tenant_id, err := strconv.Atoi(exploded[5])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	sd := r.Form.Get("date_of_occupancy")
+	ed := r.Form.Get("exit_date")
+	cAt := r.Form.Get("created_at")
+
+	layout := "2006-01-02"
+
+	date_of_occupancy, err := time.Parse(layout, sd)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse start date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	exit_date, err := time.Parse(layout, ed)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse end date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	created_at, err := time.Parse(layout, cAt)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't created at date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	tenant, err := m.DB.GetTenantByUnitID(unit_id)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't find tenant")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	tenant.ID = tenant_id
+	tenant.FirstName =  r.Form.Get("first_name")
+	tenant.LastName = r.Form.Get("last_name")
+	tenant.Email = r.Form.Get("email")
+	tenant.Phone = r.Form.Get("phone")
+	tenant.OtherPhone = r.Form.Get("other_phone")
+	tenant.AlternateContactPersonName = r.Form.Get("other_contact_name")
+	tenant.AlternateContactPersonPhone = r.Form.Get("other_contact_phone")
+	tenant.RiskID = 1
+	tenant.UnitID = unit_id
+	tenant.DateOfOccupancy = date_of_occupancy
+	tenant.ExitDate = exit_date
+	tenant.InvoiceID = 1
+	tenant.CreatedAt = created_at
+	tenant.UpdatedAt = time.Now()
+
+	err = m.DB.UpdateTenant(tenant)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Updated tenant details")
+	
+	http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+
 }
