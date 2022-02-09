@@ -91,3 +91,12 @@ func (m *testDBRepo) InsertNewExpense(u models.Expenses) error {
 func (m *testDBRepo) UpdateExpense(u models.Expenses) error {
 	return nil
 }
+
+func (m *testDBRepo) InsertNewInvoice(u models.Invoice) error {
+	return nil
+}
+
+func (m *testDBRepo)GetInvoicesByUnitID(id int) ([]models.Invoice, error) {
+	var invoices []models.Invoice
+	return invoices, nil
+}

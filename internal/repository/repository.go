@@ -35,4 +35,7 @@ type DatabaseRepo interface {
 
 	InsertNewExpense(u models.Expenses) error
 	UpdateExpense(u models.Expenses) error
+
+	InsertNewInvoice(u models.Invoice) error
+	GetInvoicesByUnitID(id int) ([]models.Invoice, error)
 }

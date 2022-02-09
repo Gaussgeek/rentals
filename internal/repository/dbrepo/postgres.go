@@ -598,3 +598,72 @@ func (m *postgresDBRepo) UpdateExpense(u models.Expenses) error {
 				
 	return nil
 }
+
+func (m *postgresDBRepo) InsertNewInvoice(u models.Invoice) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `insert into invoice (invoice_name, unit_id, monthly_amount, amount_paid, date_paid, 
+			amount_due, due_date, created_at, updated_at)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+
+	_, err := m.DB.ExecContext(ctx, stmt,
+				u.InvoiceName,
+				u.UnitID,
+				u.MonthlyAmount,
+				u.AmountReceived,
+				u.DatePaid,
+				u.AmountDue,
+				u.DateDue,
+				u.CreatedAt,
+				u.UpdatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *postgresDBRepo) GetInvoicesByUnitID(id int) ([]models.Invoice, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var invoices []models.Invoice
+
+	query := `select id, invoice_name, unit_id, monthly_amount, amount_paid, date_paid, amount_due, due_date, created_at, updated_at
+			from invoice where unit_id = $1`
+	
+	rows, err := m.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var p models.Invoice
+		err := rows.Scan(
+			&p.ID,
+			&p.InvoiceName,
+			&p.UnitID,
+			&p.MonthlyAmount,
+			&p.AmountReceived,
+			&p.DatePaid,
+			&p.AmountDue,
+			&p.DateDue,
+			&p.CreatedAt,
+			&p.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		invoices = append(invoices, p)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return invoices, nil
+}

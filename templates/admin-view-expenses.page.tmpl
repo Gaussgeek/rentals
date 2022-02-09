@@ -33,8 +33,8 @@
                       Invoices
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                      <li><a class="dropdown-item" href="/admin/unit-details/1/show/rent">Rent</a></li>
-                      <li><a class="dropdown-item" href="/admin/unit-details/1/show/utilities">Utilities</a></li>
+                      <li><a class="dropdown-item" href="/admin/unit-details/{{$id}}/add-new-invoice">Add New Invoice</a></li>
+                      <li><a class="dropdown-item" href="/admin/unit-details/{{$id}}/view-invoices">View Invoices</a></li>
                       
                     </ul>
                   
@@ -125,7 +125,7 @@
                                                         
                         <input class="form-control"
                                id="due_date" autocomplete="off" type='date'
-                               name='due_date' value="{{$expense.Duedate}}" required>
+                               name='due_date' value="{{$expense.DueDate}}" required>
                     </div>                                      
                                
                     <hr>

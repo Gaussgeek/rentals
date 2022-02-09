@@ -60,6 +60,12 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Post("/unit-details/{unit}/update-expenses/{id}", handlers.Repo.AdminUpdateExpenseByID)
 
 		mux.Get("/unit-details/{id}/view-tenants", handlers.Repo.AdminShowTenantDetails)
+
+		mux.Get("/unit-details/{id}/add-new-invoice", handlers.Repo.AdminAddNewInvoice)
+		mux.Post("/unit-details/{id}/add-new-invoice", handlers.Repo.AdminPostAddNewInvoice)
+
+		mux.Get("/unit-details/{{$id}}/view-invoices", handlers.Repo.AdminShowInvoicesByUnitID)
+		
 	})
 
 	return mux

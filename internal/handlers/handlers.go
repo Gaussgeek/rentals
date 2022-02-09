@@ -936,3 +936,138 @@ func (m *Repository) AdminUpdateExpenseByID(w http.ResponseWriter, r *http.Reque
 
 	http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
 }
+
+// AdminAddNewInvoice adds a new invoice
+func (m *Repository) AdminAddNewInvoice(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	intmap := make(map[string]int)
+	intmap["unit_id"] = unit_id
+
+	render.Template(w, r, "admin-add-new-invoice.page.tmpl", &models.TemplateData{
+		Form:   forms.New(nil),
+		IntMap: intmap,
+	})
+}
+
+//  AdminPostAddNewInvoice handles post add of a new invoice
+func (m *Repository) AdminPostAddNewInvoice(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.RenewToken(r.Context())
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("invoice_name", "amount_paid", "date_paid", "due_date", "unit_id")
+
+	if !form.Valid() {
+		render.Template(w, r, "admin-add-new-invoice.page.tmpl", &models.TemplateData{
+			Form: form,
+		})
+		return
+	}
+
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	monthly_amount, err := strconv.Atoi(r.Form.Get("monthly_amount"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	amount_paid, err := strconv.Atoi(r.Form.Get("amount_paid"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	amount_due, err := strconv.Atoi(r.Form.Get("amount_due"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	d_paid := r.Form.Get("date_paid")
+	du_date := r.Form.Get("due_date")
+
+	layout := "2006-01-02"
+
+	date_paid, err := time.Parse(layout, d_paid)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse paid date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	due_date, err := time.Parse(layout, du_date)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse due date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	NewInvoice := models.Invoice{
+		InvoiceName: r.Form.Get("invoice_name"),
+		UnitID:      unit_id,
+		MonthlyAmount: monthly_amount,
+		AmountReceived:  amount_paid,
+		DatePaid:    date_paid,
+		AmountDue:   amount_due,
+		DateDue:     due_date,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	err = m.DB.InsertNewInvoice(NewInvoice)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't insert expense into database!")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/add-new-expenses", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Successfully added new invoice to the database.")
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+}
+
+// AdminShowInvoices displays invoices by unit id
+func (m *Repository) AdminShowInvoicesByUnitID(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	intmap := make(map[string]int)
+	intmap["unit_id"] = unit_id
+
+	invoices, err := m.DB.GetInvoicesByUnitID(unit_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["invoices"] = invoices
+
+	render.Template(w, r, "admin-all-invoices.page.tmpl", &models.TemplateData{
+		Data: data,
+		IntMap: intmap,
+	})
+}
