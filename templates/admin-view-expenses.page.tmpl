@@ -55,7 +55,7 @@
     </nav>
 {{define "page-title"}}
    <div style="padding-left: 5em;">
-       Add A New Tenant
+       Unit Expenses
    </div> 
 {{end}}
 
@@ -64,87 +64,74 @@
     <div class="container">
         <div class="row">
             <div class="col">
+                {{$expense := index .Data "expense"}}
                 {{$id := index .IntMap "unit_id"}}
-                <form action="/admin/unit-details/{{$id}}/add-new-tenant" method="post" class="row g-3" validate>
+                <form action="/admin/unit-details/{{$id}}/update-expenses/{{$expense.ID}}" method="post" class="row g-3" validate>
                     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
                     <input type="hidden" name="unit_id" value="{{$id}}">
+                    <input type="hidden" name="expense_id" value="{{$expense.ID}}">
              
                     <div class="col-md-6">
-                        <label for="first_name" class="form-label">First Name</label>
+                        <label for="expense_name" class="form-label">Expense Name</label>
                                                         
                         <input class="form-control"
-                               id="first_name" autocomplete="off" type='text'
-                               name='first_name' value="" required>
+                               id="expense_name" autocomplete="off" type='text'
+                               name='expense_name' value="{{$expense.ExpenseName}}" required>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="last_name" class="form-label">Last Name</label>
+                        <label for="unit_id" class="form-label">Unit ID</label>
                                                         
                         <input class="form-control"
-                               id="last_name" autocomplete="off" type='text'
-                               name='last_name' value="" required>
+                               id="unit_id" autocomplete="off" type='text'
+                               name='unit_id' value="{{$id}}" disabled>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="amount_paid" class="form-label">Amount Paid(UGX)</label>
+                        
+                        <input class="form-control"
+                               id="amount_paid" autocomplete="off" type='text'
+                               name='amount_paid' value="{{$expense.AmountPaid}}" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="date_paid" class="form-label">Date Paid</label>
+                        
+                        <input class="form-control"
+                               id="date_paid" autocomplete="off" type='date'
+                               name='date_paid' value="{{$expense.DatePaid}}" required>
                     </div>
 
                     <div class="col-12">
-                        <label for="email" class="form-label">Email</label>
-                        
+                        <label for="narration" class="form-label">Narration</label>
+                                                        
                         <input class="form-control"
-                               id="email" autocomplete="off" type='email'
-                               name='email' value="" required>
+                               id="narration" autocomplete="off" type='text'
+                               name='narration' value="{{$expense.Narration}}" required  >
+                    </div>
+
+
+                    <div class="col-md-6">
+                        <label for="amount_due" class="form-label">Amount Due(UGX)</label>
+                                                        
+                        <input class="form-control"
+                               id="amount_due" autocomplete="off" type='text'
+                               name='amount_due' value="{{$expense.AmountDue}}" required>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="phone" class="form-label">Phone</label>
+                        <label for="due_date" class="form-label">Due Date</label>
                                                         
                         <input class="form-control"
-                               id="phone" autocomplete="off" type='text'
-                               name='phone' value="" required>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="other_phone" class="form-label">Other Phone</label>
-                                                        
-                        <input class="form-control"
-                               id="other_phone" autocomplete="off" type='text'
-                               name='other_phone' value="" required>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="other_contact_name" class="form-label">Other Contact Name</label>
-                                                        
-                        <input class="form-control"
-                               id="other_contact_name" autocomplete="off" type='text'
-                               name='other_contact_name' value="" required  >
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="other_contact_phone" class="form-label">Other Contact Phone</label>
-                                                        
-                        <input class="form-control"
-                               id="other_contact_phone" autocomplete="off" type='text'
-                               name='other_contact_phone' value="" required>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="date_of_occupancy" class="form-label">Date Of Occupancy</label>
-                                                        
-                        <input class="form-control"
-                               id="date_of_occupancy" autocomplete="off" type='date'
-                               name='date_of_occupancy' value="" required>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="exit_date" class="form-label">Exit Date</label>
-                                                        
-                        <input class="form-control"
-                               id="exit_date" autocomplete="off" type='date'
-                               name='exit_date' value="" required>
-                    </div>
+                               id="due_date" autocomplete="off" type='date'
+                               name='due_date' value="{{$expense.Duedate}}" required>
+                    </div>                                      
                                
                     <hr>
                     <div class="row">
                       <div class="col">
-                            <input type="submit" class="btn btn-primary" value="Submit">
+                            <input type="submit" class="btn btn-primary" value="Update">
                         </div>
 
                         <div class="col">

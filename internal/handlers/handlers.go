@@ -384,6 +384,62 @@ func (m *Repository) AdminPostAddUnitToProperty(w http.ResponseWriter, r *http.R
 
 }
 
+// AdminUpdateUnit updates a unit name
+func (m *Repository) AdminUpdateUnit(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.RenewToken(r.Context())
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	/*
+		prop_id, err := strconv.Atoi(r.Form.Get("property_id"))
+		if err != nil {
+			m.App.Session.Put(r.Context(), "error", "can't find property ID")
+			http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+			return
+		}
+	*/
+
+	unit, err := m.DB.GetUnitByUnitID(unit_id)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't find unit from database")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	unit.OccupancyStatus, err = strconv.ParseBool(r.Form.Get("occupancy_status"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	unit.UnitName = r.Form.Get("unit_name")
+	unit.UpdatedAt = time.Now()
+
+	prop_id := unit.PropertyID
+
+	err = m.DB.UpdateUnitDetails(unit)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Updated unit details")
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/all-properties/%d/view-units", prop_id), http.StatusSeeOther)
+
+}
+
 // AdminShowUnitsByPropertyID handles display of all units at a property
 func (m *Repository) AdminShowUnitsByPropertyID(w http.ResponseWriter, r *http.Request) {
 	exploded := strings.Split(r.RequestURI, "/")
@@ -441,12 +497,12 @@ func (m *Repository) AdminAddTenantByUnitID(w http.ResponseWriter, r *http.Reque
 		helpers.ServerError(w, err)
 		return
 	}
-	
+
 	intmap := make(map[string]int)
 	intmap["unit_id"] = unit_id
-	
+
 	render.Template(w, r, "unit-add-new-tenant.page.tmpl", &models.TemplateData{
-		Form: forms.New(nil),
+		Form:   forms.New(nil),
 		IntMap: intmap,
 	})
 }
@@ -476,7 +532,6 @@ func (m *Repository) AdminPostAddTenantByUnitID(w http.ResponseWriter, r *http.R
 		return
 	}
 
-
 	sd := r.Form.Get("date_of_occupancy")
 	ed := r.Form.Get("exit_date")
 
@@ -496,25 +551,22 @@ func (m *Repository) AdminPostAddTenantByUnitID(w http.ResponseWriter, r *http.R
 		return
 	}
 
-
 	NewTenant := models.Tenant{
-		FirstName:  r.Form.Get("first_name"),
-		LastName: r.Form.Get("last_name"),
-		Email: r.Form.Get("email"),
-		Phone: r.Form.Get("phone"),
-		OtherPhone: r.Form.Get("other_phone"),
-		AlternateContactPersonName: r.Form.Get("other_contact_name"),
+		FirstName:                   r.Form.Get("first_name"),
+		LastName:                    r.Form.Get("last_name"),
+		Email:                       r.Form.Get("email"),
+		Phone:                       r.Form.Get("phone"),
+		OtherPhone:                  r.Form.Get("other_phone"),
+		AlternateContactPersonName:  r.Form.Get("other_contact_name"),
 		AlternateContactPersonPhone: r.Form.Get("other_contact_phone"),
-		RiskID: 1,
-		UnitID: unit_id,
-		DateOfOccupancy: date_of_occupancy,
-		ExitDate: exit_date,
-		InvoiceID: 1,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		RiskID:                      1,
+		UnitID:                      unit_id,
+		DateOfOccupancy:             date_of_occupancy,
+		ExitDate:                    exit_date,
+		InvoiceID:                   1,
+		CreatedAt:                   time.Now(),
+		UpdatedAt:                   time.Now(),
 	}
-
-	fmt.Println(NewTenant)
 
 	err = m.DB.InsertNewTenant(NewTenant)
 	if err != nil {
@@ -537,7 +589,7 @@ func (m *Repository) AdminShowTenantDetails(w http.ResponseWriter, r *http.Reque
 		helpers.ServerError(w, err)
 		return
 	}
-	
+
 	intmap := make(map[string]int)
 	intmap["unit_id"] = unit_id
 
@@ -547,13 +599,19 @@ func (m *Repository) AdminShowTenantDetails(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	if tenant.FirstName == "" {
+		m.App.Session.Put(r.Context(), "error", "There are no tenants yet. Add a new tenant")
+		http.Redirect(w, r, fmt.Sprintf("/admin//unit-details/%d/add-new-tenant", unit_id), http.StatusSeeOther)
+		return
+	}
+
 	data := make(map[string]interface{})
 	data["tenant"] = tenant
-	
+
 	render.Template(w, r, "admin-view-tenant.page.tmpl", &models.TemplateData{
-		Form: forms.New(nil),
+		Form:   forms.New(nil),
 		IntMap: intmap,
-		Data: data,
+		Data:   data,
 	})
 }
 
@@ -594,16 +652,6 @@ func (m *Repository) AdminUpdateTenantByID(w http.ResponseWriter, r *http.Reques
 		log.Println(err)
 	}
 
-	form := forms.New(r.PostForm)
-	form.Required("first_name", "last_name", "phone", "email", "date_of_occupancy", "unit_id")
-
-	if !form.Valid() {
-		render.Template(w, r, "admin-view-tenant.page.tmpl", &models.TemplateData{
-			Form: form,
-		})
-		return
-	}
-	
 	exploded := strings.Split(r.RequestURI, "/")
 
 	unit_id, err := strconv.Atoi(exploded[3])
@@ -620,7 +668,6 @@ func (m *Repository) AdminUpdateTenantByID(w http.ResponseWriter, r *http.Reques
 
 	sd := r.Form.Get("date_of_occupancy")
 	ed := r.Form.Get("exit_date")
-	cAt := r.Form.Get("created_at")
 
 	layout := "2006-01-02"
 
@@ -638,13 +685,6 @@ func (m *Repository) AdminUpdateTenantByID(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	created_at, err := time.Parse(layout, cAt)
-	if err != nil {
-		m.App.Session.Put(r.Context(), "error", "can't created at date")
-		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
-		return
-	}
-
 	tenant, err := m.DB.GetTenantByUnitID(unit_id)
 	if err != nil {
 		m.App.Session.Put(r.Context(), "error", "can't find tenant")
@@ -653,7 +693,7 @@ func (m *Repository) AdminUpdateTenantByID(w http.ResponseWriter, r *http.Reques
 	}
 
 	tenant.ID = tenant_id
-	tenant.FirstName =  r.Form.Get("first_name")
+	tenant.FirstName = r.Form.Get("first_name")
 	tenant.LastName = r.Form.Get("last_name")
 	tenant.Email = r.Form.Get("email")
 	tenant.Phone = r.Form.Get("phone")
@@ -665,7 +705,6 @@ func (m *Repository) AdminUpdateTenantByID(w http.ResponseWriter, r *http.Reques
 	tenant.DateOfOccupancy = date_of_occupancy
 	tenant.ExitDate = exit_date
 	tenant.InvoiceID = 1
-	tenant.CreatedAt = created_at
 	tenant.UpdatedAt = time.Now()
 
 	err = m.DB.UpdateTenant(tenant)
@@ -675,7 +714,225 @@ func (m *Repository) AdminUpdateTenantByID(w http.ResponseWriter, r *http.Reques
 	}
 
 	m.App.Session.Put(r.Context(), "flash", "Updated tenant details")
-	
+
 	http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
 
+}
+
+// AdminAddNewExpense adds a new expense
+func (m *Repository) AdminAddNewExpense(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	intmap := make(map[string]int)
+	intmap["unit_id"] = unit_id
+
+	render.Template(w, r, "admin-add-new-expense.page.tmpl", &models.TemplateData{
+		Form:   forms.New(nil),
+		IntMap: intmap,
+	})
+}
+
+// AdminPostAddNewExpense handles adding new expense
+func (m *Repository) AdminPostAddNewExpense(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.RenewToken(r.Context())
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("expense_name", "amount_paid", "narration", "date_paid", "due_date", "unit_id")
+
+	if !form.Valid() {
+		render.Template(w, r, "admin-add-new-expense.page.tmpl", &models.TemplateData{
+			Form: form,
+		})
+		return
+	}
+
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	amount_paid, err := strconv.Atoi(r.Form.Get("amount_paid"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	amount_due, err := strconv.Atoi(r.Form.Get("amount_due"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	d_paid := r.Form.Get("date_paid")
+	du_date := r.Form.Get("due_date")
+
+	layout := "2006-01-02"
+
+	date_paid, err := time.Parse(layout, d_paid)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse paid date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	due_date, err := time.Parse(layout, du_date)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse end date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	NewExpense := models.Expenses{
+		ExpenseName: r.Form.Get("expense_name"),
+		UnitID:      unit_id,
+		AmountPaid:  amount_paid,
+		DatePaid:    date_paid,
+		Narration:   r.Form.Get("narration"),
+		AmountDue:   amount_due,
+		DueDate:     due_date,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	err = m.DB.InsertNewExpense(NewExpense)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't insert expense into database!")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/add-new-expenses", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Successfully added new expense to the database.")
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+}
+
+// AdminGetExpensesByUnitID displays unit expenses
+func (m *Repository) AdminGetExpensesByUnitID(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	intmap := make(map[string]int)
+	intmap["unit_id"] = unit_id
+
+	expense, err := m.DB.GetExpenseByUnitID(unit_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	if expense.ExpenseName == "" {
+		m.App.Session.Put(r.Context(), "error", "There are no Expenses yet. Add a new expense")
+		http.Redirect(w, r, fmt.Sprintf("/admin//unit-details/%d/add-new-expenses", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["expense"] = expense
+
+	render.Template(w, r, "admin-view-expenses.page.tmpl", &models.TemplateData{
+		Form:   forms.New(nil),
+		IntMap: intmap,
+		Data:   data,
+	})
+}
+
+// AdminUpdateExpenseByID updates an expense
+func (m *Repository) AdminUpdateExpenseByID(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.RenewToken(r.Context())
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	
+	/*
+	expense_id, err := strconv.Atoi(exploded[5])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	*/
+
+	amount_paid, err := strconv.Atoi(r.Form.Get("amount_paid"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	amount_due, err := strconv.Atoi(r.Form.Get("amount_due"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	d_paid := r.Form.Get("date_paid")
+	du_date := r.Form.Get("due_date")
+
+	layout := "2006-01-02"
+
+	date_paid, err := time.Parse(layout, d_paid)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse paid date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	due_date, err := time.Parse(layout, du_date)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse end date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	UnitExpense, err := m.DB.GetExpenseByUnitID(unit_id)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't find tenant")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	UnitExpense.ExpenseName = r.Form.Get("expense_name")
+	UnitExpense.AmountPaid = amount_paid
+	UnitExpense.DatePaid = date_paid
+	UnitExpense.AmountDue = amount_due
+	UnitExpense.DueDate = due_date
+	UnitExpense.Narration = r.Form.Get("narration")
+	UnitExpense.UpdatedAt = time.Now()
+
+	err = m.DB.UpdateExpense(UnitExpense)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Updated Expense details")
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
 }

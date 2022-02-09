@@ -2,6 +2,7 @@ package dbrepo
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -251,6 +252,27 @@ func (m *postgresDBRepo) InsertNewUnit(u models.Unit) error {
 	return nil
 }
 
+func (m *postgresDBRepo) UpdateUnitDetails(u models.Unit) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `update unit set unit_name =$1, occupancy_status=$2, updated_at=$3
+			where id = $4`
+	
+	_, err := m.DB.ExecContext(ctx, stmt, 
+				u.UnitName,
+				u.OccupancyStatus,
+				u.UpdatedAt,
+
+				u.ID,
+	)
+	if err != nil {
+		return err		 
+	}
+
+	return nil
+}
+
 func (m *postgresDBRepo) InsertNewTenant(u models.Tenant) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -345,7 +367,12 @@ func (m *postgresDBRepo) GetUnitByUnitID(id int) (models.Unit, error) {
 	)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			// there were no rows, but otherwise no error occurred
+			return u, nil
+		} else {
 		return u, err
+		}
 	}
 
 	return u, nil
@@ -383,7 +410,12 @@ func (m *postgresDBRepo) GetTenantByUnitID(id int) (models.Tenant, error){
 	)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			// there were no rows, but otherwise no error occurred
+			return u, nil
+		} else {
 		return u, err
+		}
 	}
 
 	return u, nil
@@ -415,7 +447,12 @@ func (m *postgresDBRepo) GetInvoiceByUnitID(id int) (models.Invoice, error){
 	)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			// there were no rows, but otherwise no error occurred
+			return u, nil
+		} else {
 		return u, err
+		}
 	}
 
 	return u, nil
@@ -447,7 +484,12 @@ func (m *postgresDBRepo) GetExpenseByUnitID(id int) (models.Expenses, error){
 	)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			// there were no rows, but otherwise no error occurred
+			return u, nil
+		} else {
 		return u, err
+		}
 	}
 
 	return u, nil
@@ -501,5 +543,58 @@ func (m *postgresDBRepo) DeleteTenant(id int) error {
 		return err
 	}
 
+	return nil
+}
+
+func (m *postgresDBRepo) InsertNewExpense(u models.Expenses) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `insert into expenses (expense_name, unit_id, amount_paid, date_paid, 
+			narration, amount_due, due_date, created_at, updated_at)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+
+	_, err := m.DB.ExecContext(ctx, stmt,
+				u.ExpenseName,
+				u.UnitID,
+				u.AmountPaid,
+				u.DatePaid,
+				u.Narration,
+				u.AmountDue,
+				u.DueDate,
+				u.CreatedAt,
+				u.UpdatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *postgresDBRepo) UpdateExpense(u models.Expenses) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `update expenses set expense_name = $1, amount_paid= $2, date_paid= $3,
+				amount_due= $4, due_date= $5, updated_at= $6
+				where id = $7`
+
+	_, err := m.DB.ExecContext(ctx, query, 
+					u.ExpenseName,
+					u.AmountPaid,
+					u.DatePaid,
+					u.AmountDue,
+					u.DueDate,
+					u.UpdatedAt, 
+					
+					u.ID,
+				
+					)	
+			
+	if err != nil {
+		return err
+	}
+				
 	return nil
 }

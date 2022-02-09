@@ -43,6 +43,10 @@ func (m *testDBRepo) InsertNewUnit(models.Unit) error {
 	return nil
 }
 
+func (m *testDBRepo) UpdateUnitDetails(u models.Unit) error {
+	return nil
+}
+
 func (m *testDBRepo) GetUnitsByPropertyID(id int) ([]models.Unit, error) {
 	var units []models.Unit
 
@@ -77,5 +81,13 @@ func (m *testDBRepo)UpdateTenant(u models.Tenant) error {
 }
 
 func (m *testDBRepo) DeleteTenant(id int) error {
+	return nil
+}
+
+func (m *testDBRepo) InsertNewExpense(u models.Expenses) error {
+	return nil
+}
+
+func (m *testDBRepo) UpdateExpense(u models.Expenses) error {
 	return nil
 }

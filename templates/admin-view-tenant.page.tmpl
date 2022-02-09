@@ -38,7 +38,7 @@
         
         <input class="form-control"
                id="unit_id" autocomplete="off" type='text'
-               name='unit_id' value="{{$tenant.UnitID}}" disabled>
+               name='unit_id' value="{{$id}}" disabled>
     </div>
 
     <div class="col-md-6">
@@ -104,7 +104,7 @@
             </div>
         <div class="col">
             <div class="float-right">
-                <a href="#!" class="btn btn-danger" onclick="deletetenant({{$tenant.ID}})">Delete</a>
+                <a class="btn btn-danger" onclick="deletetenant({{$tenant.ID}})">Delete</a>
             </div>
         </div>
     </div>
@@ -129,7 +129,7 @@
                 msg: 'Are you sure?',
                 callback: function (result) {
                     if (result !== false) {
-                        window.location.href = "/admin/delete-tenant/{{$tenant.UnitID}}/{{$tenant.ID}}/"
+                        window.location.href = "/admin/delete-tenant/{{$tenant.UnitID}}/"+ id
                             ;
                     }
                 }

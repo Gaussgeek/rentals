@@ -32,7 +32,7 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
 	mux.Route("/admin", func(mux chi.Router) {
-		//mux.Use(Auth)
+		mux.Use(Auth)
 		mux.Get("/dashboard", handlers.Repo.AdminDashboard)
 
 		mux.Get("/add-new-property", handlers.Repo.AdminAddNewProperty)
@@ -47,12 +47,18 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Get("/all-properties/{id}/view-units", handlers.Repo.AdminShowUnitsByPropertyID)
 
 		mux.Get("/unit-details/{id}/show", handlers.Repo.AdminShowUnitDetails)
+		mux.Post("/update-unit/{id}", handlers.Repo.AdminUpdateUnit)
 		mux.Get("/unit-details/{id}/add-new-tenant", handlers.Repo.AdminAddTenantByUnitID)
 		mux.Post("/unit-details/{id}/add-new-tenant", handlers.Repo.AdminPostAddTenantByUnitID)
 
-		mux.Post("/unit-details/{id}/update-tenant/{id}", handlers.Repo.AdminUpdateTenantByID)
-		mux.Get("/delete-tenant/{id}/{id}", handlers.Repo.AdminDeleteTenant)
-		
+		mux.Post("/unit-details/{unit}/update-tenant/{id}", handlers.Repo.AdminUpdateTenantByID)
+		mux.Get("/delete-tenant/{unit}/{id}", handlers.Repo.AdminDeleteTenant)
+
+		mux.Get("/unit-details/{id}/add-new-expenses", handlers.Repo.AdminAddNewExpense)
+		mux.Post("/unit-details/{id}/add-new-expenses", handlers.Repo.AdminPostAddNewExpense)
+		mux.Get("/unit-details/{id}/view-expenses", handlers.Repo.AdminGetExpensesByUnitID)
+		mux.Post("/unit-details/{unit}/update-expenses/{id}", handlers.Repo.AdminUpdateExpenseByID)
+
 		mux.Get("/unit-details/{id}/view-tenants", handlers.Repo.AdminShowTenantDetails)
 	})
 
