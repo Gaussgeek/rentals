@@ -346,6 +346,48 @@ func (m *postgresDBRepo) GetUnitsByPropertyID(id int) ([]models.Unit, error) {
 	return units, nil
 }
 
+func (m *postgresDBRepo) GetAllUnitsByOwnerID(id int) ([]models.Unit, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var units []models.Unit
+	
+	query := `select all u.id, u.unit_name , u.property_id , u.occupancy_status, u.created_at , u.updated_at 
+			from unit u
+			where property_id in 
+			(select all id from property p where owner_id = $1)`
+
+	rows, err := m.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, err
+	 }
+	defer rows.Close()
+				  
+	for rows.Next() {
+				var u models.Unit
+				err := rows.Scan(
+						  &u.ID,
+						  &u.UnitName,
+						  &u.PropertyID,
+						  &u.OccupancyStatus,
+						  &u.CreatedAt,
+						  &u.UpdatedAt,
+						  )
+				if err != nil {
+					return nil, err
+					}
+				  
+		units = append(units, u)
+					
+	}
+		
+	if err = rows.Err(); err != nil {
+			 return nil, err
+	}
+		
+	return units, nil
+}
+
 func (m *postgresDBRepo) GetUnitByUnitID(id int) (models.Unit, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -666,4 +708,66 @@ func (m *postgresDBRepo) GetInvoicesByUnitID(id int) ([]models.Invoice, error) {
 	}
 
 	return invoices, nil
+}
+
+func (m *postgresDBRepo) GetInvoiceByInvoiceID(id int) (models.Invoice, error){
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `select id, invoice_name, unit_id, monthly_amount, amount_paid, date_paid, amount_due, due_date, created_at, updated_at
+			from invoice where id = $1`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	var u models.Invoice
+
+	err := row.Scan(
+		&u.ID,
+		&u.InvoiceName,
+		&u.UnitID,
+		&u.MonthlyAmount,
+		&u.AmountReceived,
+		&u.DatePaid,
+		&u.AmountDue,
+		&u.DateDue,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// there were no rows, but otherwise no error occurred
+			return u, nil
+		} else {
+		return u, err
+		}
+	}
+
+	return u, nil
+}
+
+func (m *postgresDBRepo) UpdateInvoice(u models.Invoice) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `update invoice set invoice_name =$1, monthly_amount= $2, amount_paid=$3, date_paid= $4, amount_due=$5, due_date=$6, updated_at=$7
+			 where id = $8`
+
+	_, err := m.DB.ExecContext(ctx, query, 
+				u.InvoiceName,
+				u.MonthlyAmount,
+				u.AmountReceived,
+				u.DatePaid,
+				u.AmountDue,
+				u.DateDue,
+				u.UpdatedAt,
+				
+				u.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+				
+	return nil
 }

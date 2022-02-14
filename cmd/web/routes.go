@@ -46,6 +46,8 @@ func routes(app *config.AppConfig) http.Handler {
 
 		mux.Get("/all-properties/{id}/view-units", handlers.Repo.AdminShowUnitsByPropertyID)
 
+		mux.Get("/all_units/show", handlers.Repo.AdminShowAllUnits)
+
 		mux.Get("/unit-details/{id}/show", handlers.Repo.AdminShowUnitDetails)
 		mux.Post("/update-unit/{id}", handlers.Repo.AdminUpdateUnit)
 		mux.Get("/unit-details/{id}/add-new-tenant", handlers.Repo.AdminAddTenantByUnitID)
@@ -64,7 +66,9 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Get("/unit-details/{id}/add-new-invoice", handlers.Repo.AdminAddNewInvoice)
 		mux.Post("/unit-details/{id}/add-new-invoice", handlers.Repo.AdminPostAddNewInvoice)
 
-		mux.Get("/unit-details/{{$id}}/view-invoices", handlers.Repo.AdminShowInvoicesByUnitID)
+		mux.Get("/unit-details/{id}/view-invoices", handlers.Repo.AdminShowInvoicesByUnitID)
+		mux.Get("/invoice-details/{id}/show", handlers.Repo.AdminShowInvoiceByInvoiceID)
+		mux.Post("/unit-details/{unit}/update-invoice/{id}", handlers.Repo.AdminUpdateInvoiceByInvoiceID)
 		
 	})
 

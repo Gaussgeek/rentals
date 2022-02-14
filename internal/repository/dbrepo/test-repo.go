@@ -100,3 +100,17 @@ func (m *testDBRepo)GetInvoicesByUnitID(id int) ([]models.Invoice, error) {
 	var invoices []models.Invoice
 	return invoices, nil
 }
+
+func (m *testDBRepo) GetInvoiceByInvoiceID(id int) (models.Invoice, error) {
+	var u models.Invoice
+	return u, nil
+}
+
+func (m *testDBRepo) UpdateInvoice(u models.Invoice) error {
+	return nil
+}
+
+func (m *testDBRepo) GetAllUnitsByOwnerID(id int) ([]models.Unit, error) {
+	var u []models.Unit
+	return u, nil
+}

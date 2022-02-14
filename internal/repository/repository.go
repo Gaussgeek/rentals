@@ -27,6 +27,7 @@ type DatabaseRepo interface {
 	DeleteTenant(id int) error
 
 	GetUnitsByPropertyID(id int) ([]models.Unit, error)
+	GetAllUnitsByOwnerID(id int) ([]models.Unit, error)
 
 	GetUnitByUnitID(id int) (models.Unit, error)
 	GetTenantByUnitID(id int) (models.Tenant, error)
@@ -38,4 +39,7 @@ type DatabaseRepo interface {
 
 	InsertNewInvoice(u models.Invoice) error
 	GetInvoicesByUnitID(id int) ([]models.Invoice, error)
+
+	GetInvoiceByInvoiceID(id int) (models.Invoice, error)
+	UpdateInvoice(u models.Invoice) error 
 }

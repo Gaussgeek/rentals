@@ -1,0 +1,165 @@
+{{template "unit" .}}
+
+{{define "css"}}
+    
+{{end}}
+<div class="container-scroller">
+    <!-- partial:partials/_navbar.html -->
+    <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+        <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
+            <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+                <span class="ti-view-list"></span>
+            </button>
+        </div>
+
+        <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
+            <ul class="navbar-nav navbar-nav-right">
+
+                {{$id := index .IntMap "unit_id"}}
+                <li class="nav-item nav-profile mt-2">
+                    <button class="btn btn-info dropdown-toggle " type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                        Tenant
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                        <li><a class="dropdown-item" href="/admin/unit-details/{{$id}}/add-new-tenant">Add New Tenant</a></li>
+                        <li><a class="dropdown-item" href="/admin/unit-details/{{$id}}/view-tenants">View Tenants</a></li>
+                        
+                      </ul>
+                    
+                </li>
+               
+                <li>                    
+                    <button class="btn btn-success dropdown-toggle mt-3" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                      Invoices
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                        <li><a class="dropdown-item" href="/admin/unit-details/{{$id}}/add-new-invoice">Add New Invoice</a></li>
+                        <li><a class="dropdown-item" href="/admin/unit-details/{{$id}}/view-invoices">View Invoices</a></li>
+                      
+                    </ul>
+                  
+                </li>
+              
+                <li class="nav-item nav-profile mt-2" style="margin-left: 15px;">
+                    <button class="btn btn-dark dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                        Expenses                          
+                    </button>
+                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                        <li><a class="dropdown-item" href="/admin/unit-details/1/add-new-expenses">Add New Expense</a></li>
+                        <li><a class="dropdown-item" href="/admin/unit-details/1/view-expenses">View Expenses</a></li>
+                        
+                      </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+{{define "page-title"}}
+   <div style="padding-left: 5em;">
+        Invoice Details
+   </div> 
+{{end}}
+
+{{define "content"}}
+<div id="add-tenant-to-unit-page" class="basic-1 bg-gray">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                {{$id := index .IntMap "unit_id"}}
+                {{$invoice := index .Data "invoice"}}
+                <form action="/admin/unit-details/{{$id}}/update-invoice/{{$invoice.ID}}" method="post" class="row g-3" validate>
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <input type="hidden" name="unit_id" value="{{$id}}">
+             
+                    <div class="col-md-6">
+                        <label for="invoice_name" class="form-label">Invoice Name</label>
+                                                        
+                        <input class="form-control"
+                               id="invoice_name" autocomplete="off" type='text'
+                               name='invoice_name' value="{{$invoice.InvoiceName}}" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="unit_id" class="form-label">Unit ID</label>
+                                                        
+                        <input class="form-control"
+                               id="unit_id" autocomplete="off" type='text'
+                               name='unit_id' value="{{$id}}" disabled>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="monthly_amount" class="form-label">Monthly Amount(UGX)</label>
+                        
+                        <input class="form-control"
+                               id="monthly_amount" autocomplete="off" type='text'
+                               name='monthly_amount' value="{{$invoice.MonthlyAmount}}" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="amount_paid" class="form-label">Amount Received(UGX)</label>
+                        
+                        <input class="form-control"
+                               id="amount_paid" autocomplete="off" type='text'
+                               name='amount_paid' value="{{$invoice.AmountReceived}}" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="date_paid" class="form-label">Date Received</label>
+                        
+                        <input class="form-control"
+                               id="date_paid" autocomplete="off" type='date'
+                               name='date_paid' value="{{humanDate $invoice.DatePaid}}" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="amount_due" class="form-label">Amount Due(UGX)</label>
+                                                        
+                        <input class="form-control"
+                               id="amount_due" autocomplete="off" type='text'
+                               name='amount_due' value="{{$invoice.AmountDue}}" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="due_date" class="form-label">Due Date</label>
+                                                        
+                        <input class="form-control"
+                               id="due_date" autocomplete="off" type='date'
+                               name='due_date' value="{{humanDate $invoice.DateDue}}" required>
+                    </div>  
+                    
+                    <div class="col-md-6">
+                        <label for="created_at" class="form-label">Created At</label>
+                        
+                        <input class="form-control"
+                               id="created_at" autocomplete="off" type='date'
+                               name='created_at' value="{{humanDate $invoice.CreatedAt}}" disabled>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="updated_at" class="form-label">Last Updated At</label>
+                                                        
+                        <input class="form-control"
+                               id="updated_at" autocomplete="off" type='text'
+                               name='updated_at' value="{{$invoice.UpdatedAt}}" disabled>
+                    </div>
+                               
+                    <hr>
+                    <div class="row">
+                      <div class="col">
+                            <input type="submit" class="btn btn-primary" value="Update">
+                        </div>
+
+                        <div class="col">
+                            <div class="float-right">
+                                <a href="#!" class="btn btn-danger" onclick="window.history.go(-1)">Cancel</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{{end}}

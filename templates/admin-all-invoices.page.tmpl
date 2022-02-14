@@ -71,8 +71,8 @@
             <th>Invoice Name</th>
             <th>Unit ID</th>
             <th>Monthly Amount</th>
-            <th>Amount Paid</th>
-            <th>Date Paid</th>
+            <th>Amount Received</th>
+            <th>Date Received</th>
             <th>Amount Due</th>
             <th>Due Date</th>
             <th>Created At</th>
@@ -82,18 +82,18 @@
         <tbody>
         {{range $invoices}}
             <tr>
-                <td>{{$invoices.ID}}</td>
+                <td>{{.ID}}</td>
                 <td>
-                    <a href="/admin/invoice-details/{{$invoices.ID}}/show">
-                        {{$invoices.ExpenseName}}
+                    <a href="/admin/invoice-details/{{.ID}}/show">
+                        {{.InvoiceName}}
                     </a>
                 </td>
-                <td>{{$invoices.UnitID}}</td>
-                <td>{{$invoices.MonthlyAmount}}</td>
-                <td>{{$invoices.AmountPaid}}</td>
-                <td>{{humanDate $invoices.DatePaid}}</td>
-                <td>{{$invoices.AmountDue}}</td>
-                <td>{{humanDate $invoices.DateDue}}</td>
+                <td>{{.UnitID}}</td>
+                <td>{{.MonthlyAmount}}</td>
+                <td>{{.AmountReceived}}</td>
+                <td>{{humanDate .DatePaid}}</td>
+                <td>{{.AmountDue}}</td>
+                <td>{{humanDate .DateDue}}</td>
                 <td>{{humanDate .CreatedAt}}</td>
                 <td>{{humanDate .UpdatedAt}}</td>
             </tr>

@@ -872,14 +872,6 @@ func (m *Repository) AdminUpdateExpenseByID(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	
-	/*
-	expense_id, err := strconv.Atoi(exploded[5])
-	if err != nil {
-		helpers.ServerError(w, err)
-		return
-	}
-	*/
-
 	amount_paid, err := strconv.Atoi(r.Form.Get("amount_paid"))
 	if err != nil {
 		helpers.ServerError(w, err)
@@ -1067,6 +1059,148 @@ func (m *Repository) AdminShowInvoicesByUnitID(w http.ResponseWriter, r *http.Re
 	data["invoices"] = invoices
 
 	render.Template(w, r, "admin-all-invoices.page.tmpl", &models.TemplateData{
+		Data: data,
+		IntMap: intmap,
+	})
+}
+
+//  AdminShowInvoiceByInvoiceID dosplays invoice details
+func (m *Repository) AdminShowInvoiceByInvoiceID(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+
+	invoice_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	invoice, err := m.DB.GetInvoiceByInvoiceID(invoice_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	intmap := make(map[string]int)
+	intmap["unit_id"] = invoice.UnitID
+
+	data := make(map[string]interface{})
+	data["invoice"] = invoice
+
+	render.Template(w, r, "admin-one-invoice.page.tmpl", &models.TemplateData{
+		Data: data,
+		IntMap: intmap,
+	})
+}
+
+// AdminUpdateInvoiceByInvoiceID updates an invoice
+func (m *Repository) AdminUpdateInvoiceByInvoiceID(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.RenewToken(r.Context())
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	exploded := strings.Split(r.RequestURI, "/")
+
+	unit_id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	invoice_id, err := strconv.Atoi(exploded[5])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	monthly_amount, err := strconv.Atoi(r.Form.Get("monthly_amount"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	
+	amount_paid, err := strconv.Atoi(r.Form.Get("amount_paid"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	amount_due, err := strconv.Atoi(r.Form.Get("amount_due"))
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	d_paid := r.Form.Get("date_paid")
+	du_date := r.Form.Get("due_date")
+
+	layout := "2006-01-02"
+
+	date_paid, err := time.Parse(layout, d_paid)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse received date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	due_date, err := time.Parse(layout, du_date)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't parse end date")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	Invoice, err := m.DB.GetInvoiceByInvoiceID(invoice_id)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't find invoice")
+		http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+		return
+	}
+
+	Invoice.InvoiceName = r.Form.Get("invoice_name")
+	Invoice.MonthlyAmount = monthly_amount
+	Invoice.AmountReceived = amount_paid
+	Invoice.DatePaid = date_paid
+	Invoice.AmountDue = amount_due
+	Invoice.DateDue = due_date
+	Invoice.UpdatedAt = time.Now()
+
+	err = m.DB.UpdateInvoice(Invoice)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Updated Invoice successfully")
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
+}
+
+//  AdminShowAllUnits displays all units of the owner
+func (m *Repository) AdminShowAllUnits(w http.ResponseWriter, r *http.Request) {
+	owner_id, ok := m.App.Session.Get(r.Context(), "user_id").(int)
+
+	if !ok {
+		m.App.Session.Put(r.Context(), "error", "can't get your id from session")
+		http.Redirect(w, r, fmt.Sprintf("/admin/all-properties/%d/show", owner_id), http.StatusSeeOther)
+		return
+	}
+
+	units, err := m.DB.GetAllUnitsByOwnerID(owner_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	intmap := make(map[string]int)
+	intmap["owner_id"] = owner_id
+
+	data := make(map[string]interface{})
+	data["units"] = units
+
+	render.Template(w, r, "admin-all-owner-units.page.tmpl", &models.TemplateData{
 		Data: data,
 		IntMap: intmap,
 	})
