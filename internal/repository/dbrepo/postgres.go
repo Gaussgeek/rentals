@@ -43,7 +43,7 @@ func (m *postgresDBRepo) GetUserByID(id int) (models.Users, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `select id, first_name, last_name, email, password, access_level, created_at, updated_at
+	query := `select id, first_name, last_name, email, is_email_verified, password, access_level, created_at, updated_at
 			from users where id = $1`
 
 	row := m.DB.QueryRowContext(ctx, query, id)
@@ -54,6 +54,7 @@ func (m *postgresDBRepo) GetUserByID(id int) (models.Users, error) {
 		&u.FirstName,
 		&u.LastName,
 		&u.Email,
+		&u.IsEmailVerified,
 		&u.Password,
 		&u.AccessLevel,
 		&u.CreatedAt,

@@ -38,8 +38,8 @@ func main() {
 
 	
 
-	//fmt.Println("Staring mail listener...")
-	//listenForMail()
+	fmt.Println("Starting mail listener...")
+	listenForMail()
 
 	fmt.Println(fmt.Sprintf("Starting application on port %s", portNumber))
 
@@ -77,8 +77,8 @@ func run() (*driver.DB, error) {
 		}
 	*/
 
-	//mailChan := make(chan models.MailData)
-	//app.MailChan = mailChan
+	mailChan := make(chan models.MailData)
+	app.MailChan = mailChan
 
 	// change this to true when in production
 	app.InProduction = *inProduction

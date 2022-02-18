@@ -6,15 +6,16 @@ import (
 
 // User is the user model
 type Users struct {
-	ID          int
-	FirstName   string
-	LastName    string
-	Email       string
-	Phone       string
-	Password    string
-	AccessLevel int
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID              int
+	FirstName       string
+	LastName        string
+	Email           string
+	IsEmailVerified bool
+	Phone           string
+	Password        string
+	AccessLevel     int
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 type Property struct {
