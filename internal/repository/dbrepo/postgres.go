@@ -121,6 +121,28 @@ func (m *postgresDBRepo) Authenticate(email, testPassword string) (int, string, 
 	return id, hashedPassword, nil
 }
 
+func (m *postgresDBRepo) AddNewTokenToUser(id int, s string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	 
+	query := `
+		update users  set token = $1, token_expiry = $2 where id = $3
+`
+	t := time.Now().Add(2*time.Hour)
+
+	_, err := m.DB.ExecContext(ctx, query,
+		s,
+		t,
+		id,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DeleteUserByID deletes a user from the database
 func (m *postgresDBRepo) DeleteUserByID(id int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

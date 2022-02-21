@@ -14,6 +14,8 @@ type Users struct {
 	Phone           string
 	Password        string
 	AccessLevel     int
+	Token           string
+	TokenExpiry     time.Time
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }

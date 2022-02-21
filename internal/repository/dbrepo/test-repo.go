@@ -114,3 +114,7 @@ func (m *testDBRepo) GetAllUnitsByOwnerID(id int) ([]models.Unit, error) {
 	var u []models.Unit
 	return u, nil
 }
+
+func (m *testDBRepo) AddNewTokenToUser(id int, s string) error {
+	return nil
+}

@@ -1,0 +1,3 @@
+add_column("users", "token", "string", {"default": ""})
+
+

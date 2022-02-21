@@ -17,6 +17,7 @@ import (
 	"github.com/Gaussgeek/rentals/internal/repository"
 	"github.com/Gaussgeek/rentals/internal/repository/dbrepo"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/dchest/uniuri"
 )
 
 // Repo the repository used by the handlers
@@ -48,6 +49,32 @@ func NewTestRepo(a *config.AppConfig) *Repository {
 func NewHandlers(r *Repository) {
 	Repo = r
 }
+
+/*
+func (m *Repository) randomString(n int) string {
+	return h.App.RandomString(n)
+}
+
+func (m *Repository) encrypt(text string) (string, error) {
+	enc := Encryption{Key: []byte(h.App.EncryptionKey)}
+
+	encrypted, err := enc.Encrypt(text)
+	if err != nil {
+		return "", err
+	}
+	return encrypted, nil
+}
+
+func (m *Repository) decrypt(crypto string) (string, error) {
+	enc := Encryption{Key: []byte(h.App.EncryptionKey)}
+
+	decrypted, err := enc.Decrypt(crypto)
+	if err != nil {
+		return "", err
+	}
+	return decrypted, nil
+}
+*/
 
 //Home is the home page handler
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
@@ -169,9 +196,70 @@ func (m *Repository) PostShowLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user, err := m.DB.GetUserByID(id)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Can't get user details from database")
+		http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		return
+	}
+
+	if !user.IsEmailVerified {
+		m.App.Session.Put(r.Context(), "error", "Verify your email to continue")
+		http.Redirect(w, r, fmt.Sprintf("/user/verify-email/%d", id), http.StatusSeeOther)
+		return
+	}
+
 	m.App.Session.Put(r.Context(), "user_id", id)
 	m.App.Session.Put(r.Context(), "flash", "Logged in successfully")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// VerifyUserEmail handles verification of user email
+func (m *Repository) VerifyUserEmail(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+
+	id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	user, err := m.DB.GetUserByID(id)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	token := uniuri.NewLen(32)
+
+	err = m.DB.AddNewTokenToUser(id, token)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	// TO DO: encrypt the token before sending to user email
+
+	// send email to user
+	htmlMessage := fmt.Sprintf(
+					`<strong>Email Verification</strong><br>
+					Dear %s: <br>
+					Click the link below to verify your email inorder to continue
+					using Property Manager App <br><br><br><br>
+
+					"/user/verify-link/%d/%s" `, user.FirstName, user.ID, token)
+	
+	msg := models.MailData{
+		To: user.Email,
+		From: "admin@admin.com",
+		Subject: "Email Verification",
+		Content: htmlMessage,
+		Template: "basic.html",
+	}
+
+	m.App.MailChan <- msg
+
+	render.Template(w, r, "email-verify-send-notice.page.tmpl", &models.TemplateData{})
 }
 
 // Logout logs a user out

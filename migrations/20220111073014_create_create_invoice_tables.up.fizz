@@ -6,6 +6,6 @@ create_table("invoice") {
 	t.Column("amount_paid", "int", {})
 	t.Column("date_paid", "date", {})
 	t.Column("amount_due", "int", {})
-	t.Column("due_date", "int", {})
+	t.Column("due_date", "date", {})
 	t.Timestamps()
 }

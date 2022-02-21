@@ -10,6 +10,8 @@ type DatabaseRepo interface {
 
 	InsertNewUser(r models.Users) error
 
+	AddNewTokenToUser(id int, s string) error
+
 	GetUserByID(id int) (models.Users, error)
 	UpdateUser(u models.Users) error
 	Authenticate(email, testPassword string) (int, string, error)
