@@ -21,6 +21,7 @@ var functions = template.FuncMap{
 	"formatDate": FormatDate,
 	"iterate":    Iterate,
 	"add":        Add,
+	"percentage": ConvertToPercentage,
 }
 
 var app *config.AppConfig
@@ -28,6 +29,10 @@ var pathToTemplates = "./templates"
 
 func Add(a, b int) int {
 	return a + b
+}
+
+func ConvertToPercentage(a, b int) int {
+	return int((a/b)*100)
 }
 
 // Iterate returns a slice of ints, starting at 1, going to count

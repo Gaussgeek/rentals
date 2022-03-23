@@ -43,7 +43,7 @@ func (m *postgresDBRepo) GetUserByID(id int) (models.Users, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `select id, first_name, last_name, email, is_email_verified, password, access_level, created_at, updated_at
+	query := `select id, first_name, last_name, email, phone, is_email_verified, password, access_level, created_at, updated_at, token, token_expiry
 			from users where id = $1`
 
 	row := m.DB.QueryRowContext(ctx, query, id)
@@ -54,11 +54,14 @@ func (m *postgresDBRepo) GetUserByID(id int) (models.Users, error) {
 		&u.FirstName,
 		&u.LastName,
 		&u.Email,
+		&u.Phone,
 		&u.IsEmailVerified,
 		&u.Password,
 		&u.AccessLevel,
 		&u.CreatedAt,
 		&u.UpdatedAt,
+		&u.Token,
+		&u.TokenExpiry,
 	)
 
 	if err != nil {
@@ -74,8 +77,9 @@ func (m *postgresDBRepo) UpdateUser(u models.Users) error {
 	defer cancel()
 
 	query := `
-		update users set first_name = $1, last_name = $2, email = $3, phone =$4 access_level = $5, updated_at = $6
-		where id = $7
+		update users set first_name = $1, last_name = $2, email = $3, phone =$4 access_level = $5,
+		is_email_verified = $6, token = $7, token_expiry = $8, updated_at = $9
+		where id = $10
 `
 
 	_, err := m.DB.ExecContext(ctx, query,
@@ -84,6 +88,9 @@ func (m *postgresDBRepo) UpdateUser(u models.Users) error {
 		u.Email,
 		u.Phone,
 		u.AccessLevel,
+		u.IsEmailVerified,
+		u.Token,
+		u.TokenExpiry,
 		time.Now(),
 
 		u.ID,
@@ -128,6 +135,7 @@ func (m *postgresDBRepo) AddNewTokenToUser(id int, s string) error {
 	query := `
 		update users  set token = $1, token_expiry = $2 where id = $3
 `
+	
 	t := time.Now().Add(2*time.Hour)
 
 	_, err := m.DB.ExecContext(ctx, query,
@@ -135,6 +143,20 @@ func (m *postgresDBRepo) AddNewTokenToUser(id int, s string) error {
 		t,
 		id,
 	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *postgresDBRepo) SetEmailVerifiedTrue(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	 
+	query := `update users set is_email_verified = $1 where id = $2`
+	_, err := m.DB.ExecContext(ctx, query, true, id)
 
 	if err != nil {
 		return err
@@ -793,4 +815,140 @@ func (m *postgresDBRepo) UpdateInvoice(u models.Invoice) error {
 	}
 				
 	return nil
+}
+
+func(m *postgresDBRepo) GetAllTenantsByOwnerID(id int) ([]models.Tenant, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var tenants []models.Tenant
+
+	query := `select all t.id, t.unit_id, t.first_name, t.email, t.phone, t.date_of_occupancy, t.exit_date 
+	from tenant t
+	where unit_id  in
+		(select all u.id 
+			from unit u
+			where property_id in 
+			(select all id from property p where owner_id = $1))`
+	
+	rows, err := m.DB.QueryContext(ctx, query, id)
+			if err != nil {
+				return nil, err
+			 }
+	defer rows.Close()
+						  
+	for rows.Next() {
+						var u models.Tenant
+						err := rows.Scan(
+								  &u.ID,
+								  &u.UnitID,
+								  &u.FirstName,
+								  &u.Email,
+								  &u.Phone,
+								  &u.DateOfOccupancy,
+								  &u.ExitDate,
+								  )
+						if err != nil {
+							return nil, err
+							}
+						  
+				tenants = append(tenants, u)
+							
+			}
+				
+			if err = rows.Err(); err != nil {
+					 return nil, err
+			}
+				
+	return tenants, nil
+}
+
+func(m *postgresDBRepo) GetOverDueExpenses(id int) ([]models.Expenses, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var expenses []models.Expenses
+
+	query := `select all e.id, e.unit_id, e.expense_name , e.amount_due, e.due_date 
+			from expenses e 
+			where e.due_date < current_date  and unit_id  in
+				(select all u.id 
+						from unit u
+						where property_id in 
+					(select all id from property p where owner_id = $1))
+				`
+	rows, err := m.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+							  
+	for rows.Next() {
+			var u models.Expenses
+			err := rows.Scan(
+				  &u.ID,
+				  &u.UnitID,
+				  &u.ExpenseName,
+				  &u.AmountDue,
+				  &u.DueDate,
+				  
+				  )
+		if err != nil {
+				return nil, err
+		}
+							  
+		expenses = append(expenses, u)
+								
+	}
+					
+	if err = rows.Err(); err != nil {
+		 return nil, err
+	}
+					
+	return expenses, nil
+}
+
+func(m *postgresDBRepo) GetOverDueInvoices(id int) ([]models.Invoice, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var invoices []models.Invoice
+
+	query := `select all i.id, i.unit_id, i.invoice_name , i.amount_due, i.due_date 
+			from invoice i 
+			where i.due_date <= current_date  and unit_id  in
+				(select all u.id 
+						from unit u
+						where property_id in 
+					(select all id from property p where owner_id = $1))
+				`
+	rows, err := m.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+							  
+	for rows.Next() {
+			var u models.Invoice
+			err := rows.Scan(
+				  &u.ID,
+				  &u.UnitID,
+				  &u.InvoiceName,
+				  &u.AmountDue,
+				  &u.DateDue,
+				  
+				  )
+		if err != nil {
+				return nil, err
+		}
+							  
+		invoices = append(invoices, u)
+								
+	}
+					
+	if err = rows.Err(); err != nil {
+		 return nil, err
+	}
+					
+	return invoices, nil
 }

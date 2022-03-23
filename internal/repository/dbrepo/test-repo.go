@@ -118,3 +118,23 @@ func (m *testDBRepo) GetAllUnitsByOwnerID(id int) ([]models.Unit, error) {
 func (m *testDBRepo) AddNewTokenToUser(id int, s string) error {
 	return nil
 }
+
+func (m *testDBRepo)SetEmailVerifiedTrue(id int) error {
+	return nil
+}
+
+func (m *testDBRepo)GetAllTenantsByOwnerID(id int) ([]models.Tenant, error) {
+	var t []models.Tenant
+	return t, nil
+}
+
+func (m *testDBRepo) GetOverDueExpenses(id int) ([]models.Expenses, error) {
+	var expenses []models.Expenses
+	return expenses, nil
+}
+
+func (m *testDBRepo) GetOverDueInvoices(id int) ([]models.Invoice, error) {
+	var invoices []models.Invoice
+	return invoices, nil
+
+}

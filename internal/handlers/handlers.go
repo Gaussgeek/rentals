@@ -203,12 +203,14 @@ func (m *Repository) PostShowLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	
 	if !user.IsEmailVerified {
 		m.App.Session.Put(r.Context(), "error", "Verify your email to continue")
 		http.Redirect(w, r, fmt.Sprintf("/user/verify-email/%d", id), http.StatusSeeOther)
 		return
 	}
 
+	
 	m.App.Session.Put(r.Context(), "user_id", id)
 	m.App.Session.Put(r.Context(), "flash", "Logged in successfully")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -230,7 +232,7 @@ func (m *Repository) VerifyUserEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := uniuri.NewLen(32)
+	token := uniuri.NewLen(128)
 
 	err = m.DB.AddNewTokenToUser(id, token)
 	if err != nil {
@@ -247,7 +249,10 @@ func (m *Repository) VerifyUserEmail(w http.ResponseWriter, r *http.Request) {
 					Click the link below to verify your email inorder to continue
 					using Property Manager App <br><br><br><br>
 
-					"/user/verify-link/%d/%s" `, user.FirstName, user.ID, token)
+					<a href="localhost:8080/user/verify-link/%d/%s"> localhost:8080/user/verify-link/%d/%s</a>
+					<br><br><br>
+					In case of a delayed response, copy and paste the link in your browser.
+					` , user.FirstName, user.ID, token, user.ID, token)
 	
 	msg := models.MailData{
 		To: user.Email,
@@ -262,6 +267,48 @@ func (m *Repository) VerifyUserEmail(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "email-verify-send-notice.page.tmpl", &models.TemplateData{})
 }
 
+// VerifyEmail handles verification of token
+func (m *Repository) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+
+	id, err := strconv.Atoi(exploded[3])
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	token := exploded[4]
+	
+	user, err := m.DB.GetUserByID(id)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	if time.Now().After(user.TokenExpiry) {
+		m.App.Session.Put(r.Context(), "error", "This token has expired. A new one has been sent to your email.")
+		http.Redirect(w, r, fmt.Sprintf("/user/verify-email/%d", id), http.StatusSeeOther)
+		return
+	}
+
+	if !(token == user.Token) {
+		m.App.Session.Put(r.Context(), "error", "Invalid verification token.")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	err = m.DB.SetEmailVerifiedTrue(id)
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Unable to verify your email")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Email has been verified successfully.")
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+
+}
+
 // Logout logs a user out
 func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 	_ = m.App.Session.Destroy(r.Context())
@@ -271,7 +318,57 @@ func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
-	render.Template(w, r, "admin-dashboard.page.tmpl", &models.TemplateData{})
+	user_id, ok := m.App.Session.Get(r.Context(), "user_id").(int)
+
+	if !ok {
+		m.App.Session.Put(r.Context(), "error", "can't get your id from session")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusSeeOther)
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["user_id"] = user_id
+	
+	tenants, err := m.DB.GetAllTenantsByOwnerID(user_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+
+	properties, err := m.DB.GetPropertiesByOwnwerID(user_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+
+	units, err := m.DB.GetAllUnitsByOwnerID(user_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+
+	dueInvoices, err := m.DB.GetOverDueInvoices(user_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+
+	dueExpenses, err := m.DB.GetOverDueExpenses(user_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+
+	data["tenants"] = tenants
+	data["properties"] = properties
+	data["units"] = units
+	data["dueInvoices"] = dueInvoices
+	data["dueExpenses"] = dueExpenses
+
+	intmap := make(map[string]int)
+	intmap["NumTenants"] = len(tenants)
+	intmap["NumProperties"] = len(properties)
+	intmap["NumUnits"] = len(units)
+
+	render.Template(w, r, "admin-dashboard.page.tmpl", &models.TemplateData{
+		Data: data,
+		IntMap: intmap,
+	})
 }
 
 //AdminAddNewProperty renders the add new property page
@@ -489,15 +586,7 @@ func (m *Repository) AdminUpdateUnit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*
-		prop_id, err := strconv.Atoi(r.Form.Get("property_id"))
-		if err != nil {
-			m.App.Session.Put(r.Context(), "error", "can't find property ID")
-			http.Redirect(w, r, fmt.Sprintf("/admin/unit-details/%d/show", unit_id), http.StatusSeeOther)
-			return
-		}
-	*/
-
+	
 	unit, err := m.DB.GetUnitByUnitID(unit_id)
 	if err != nil {
 		m.App.Session.Put(r.Context(), "error", "can't find unit from database")
@@ -1289,6 +1378,34 @@ func (m *Repository) AdminShowAllUnits(w http.ResponseWriter, r *http.Request) {
 	data["units"] = units
 
 	render.Template(w, r, "admin-all-owner-units.page.tmpl", &models.TemplateData{
+		Data: data,
+		IntMap: intmap,
+	})
+}
+
+// AdminShowAllTenants displays all tenants
+func (m *Repository) AdminShowAllTenants(w http.ResponseWriter, r *http.Request) {
+	owner_id, ok := m.App.Session.Get(r.Context(), "user_id").(int)
+
+	if !ok {
+		m.App.Session.Put(r.Context(), "error", "can't get your id from session")
+		http.Redirect(w, r, fmt.Sprintf("/admin/all-properties/%d/show", owner_id), http.StatusSeeOther)
+		return
+	}
+
+	tenants, err := m.DB.GetAllTenantsByOwnerID(owner_id)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	intmap := make(map[string]int)
+	intmap["owner_id"] = owner_id
+
+	data := make(map[string]interface{})
+	data["tenants"] = tenants
+
+	render.Template(w, r, "admin-all-tenants.page.tmpl", &models.TemplateData{
 		Data: data,
 		IntMap: intmap,
 	})

@@ -100,7 +100,7 @@
                         
                         <input class="form-control"
                                id="date_paid" autocomplete="off" type='date'
-                               name='date_paid' value="{{$expense.DatePaid}}" required>
+                               name='date_paid' value="{{humanDate $expense.DatePaid}}" required>
                     </div>
 
                     <div class="col-12">
@@ -125,7 +125,7 @@
                                                         
                         <input class="form-control"
                                id="due_date" autocomplete="off" type='date'
-                               name='due_date' value="{{$expense.DueDate}}" required>
+                               name='due_date' value="{{humanDate $expense.DueDate}}" required>
                     </div>                                      
                                
                     <hr>

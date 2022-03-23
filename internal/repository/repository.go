@@ -11,6 +11,7 @@ type DatabaseRepo interface {
 	InsertNewUser(r models.Users) error
 
 	AddNewTokenToUser(id int, s string) error
+	SetEmailVerifiedTrue(id int) error
 
 	GetUserByID(id int) (models.Users, error)
 	UpdateUser(u models.Users) error
@@ -26,6 +27,7 @@ type DatabaseRepo interface {
 
 	InsertNewTenant(u models.Tenant) error
 	UpdateTenant(u models.Tenant) error
+	GetAllTenantsByOwnerID(id int) ([]models.Tenant, error)
 	DeleteTenant(id int) error
 
 	GetUnitsByPropertyID(id int) ([]models.Unit, error)
@@ -38,9 +40,11 @@ type DatabaseRepo interface {
 
 	InsertNewExpense(u models.Expenses) error
 	UpdateExpense(u models.Expenses) error
+	GetOverDueExpenses(id int) ([]models.Expenses, error)
 
 	InsertNewInvoice(u models.Invoice) error
 	GetInvoicesByUnitID(id int) ([]models.Invoice, error)
+	GetOverDueInvoices(id int) ([]models.Invoice, error)
 
 	GetInvoiceByInvoiceID(id int) (models.Invoice, error)
 	UpdateInvoice(u models.Invoice) error 

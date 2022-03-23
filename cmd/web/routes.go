@@ -29,6 +29,8 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Post("/user/login", handlers.Repo.PostShowLogin)
 	mux.Get("/user/logout", handlers.Repo.Logout)
 
+	mux.Get("/user/verify-link/{id}/{token}", handlers.Repo.VerifyEmail)
+
 	fileServer := http.FileServer(http.Dir("./static/"))
 	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
@@ -55,6 +57,7 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Post("/unit-details/{id}/add-new-tenant", handlers.Repo.AdminPostAddTenantByUnitID)
 
 		mux.Post("/unit-details/{unit}/update-tenant/{id}", handlers.Repo.AdminUpdateTenantByID)
+		mux.Get("/all_tenants/show", handlers.Repo.AdminShowAllTenants)
 		mux.Get("/delete-tenant/{unit}/{id}", handlers.Repo.AdminDeleteTenant)
 
 		mux.Get("/unit-details/{id}/add-new-expenses", handlers.Repo.AdminAddNewExpense)
