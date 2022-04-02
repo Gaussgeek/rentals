@@ -256,7 +256,7 @@ func (m *Repository) VerifyUserEmail(w http.ResponseWriter, r *http.Request) {
 	
 	msg := models.MailData{
 		To: user.Email,
-		From: "admin@admin.com",
+		From: "info@mulisa.com",
 		Subject: "Email Verification",
 		Content: htmlMessage,
 		Template: "basic.html",

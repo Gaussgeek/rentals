@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/Gaussgeek/rentals/internal/models"
-	mail "github.com/xhit/go-simple-mail/v2"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"time"
+
+	"github.com/Gaussgeek/rentals/internal/models"
+	mail "github.com/xhit/go-simple-mail/v2"
 )
 
 func listenForMail() {
@@ -21,8 +23,12 @@ func listenForMail() {
 
 func sendMsg(m models.MailData) {
 	server := mail.NewSMTPClient()
-	server.Host = "localhost"
-	server.Port = 1025
+	server.Host = os.Getenv("MAIL_SERVER_HOST")
+	server.Username = os.Getenv("MAIL_USERNAME")
+	server.Password = os.Getenv("MAIL_SERVER_PWD")
+	server.Encryption = mail.EncryptionSTARTTLS
+	server.Authentication = mail.AuthLogin
+	server.Port = 465
 	server.KeepAlive = false
 	server.ConnectTimeout = 10 * time.Second
 	server.SendTimeout = 10 * time.Second
