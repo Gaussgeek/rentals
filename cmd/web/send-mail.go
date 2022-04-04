@@ -38,6 +38,9 @@ func sendMsg(m models.MailData) {
 		errorLog.Println(err)
 	}
 
+	// logging the credentials
+	log.Println(server.Host, server.Username, server.Password)
+
 	email := mail.NewMSG()
 	email.SetFrom(m.From).AddTo(m.To).SetSubject(m.Subject)
 	if m.Template == "" {
