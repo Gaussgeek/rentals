@@ -26,7 +26,7 @@ func sendMsg(m models.MailData) {
 	server.Host = os.Getenv("MAIL_SERVER_HOST")
 	server.Username = os.Getenv("MAIL_USERNAME")
 	server.Password = os.Getenv("MAIL_SERVER_PWD")
-	server.Encryption = mail.EncryptionSTARTTLS
+	server.Encryption = mail.EncryptionSSL
 	server.Authentication = mail.AuthLogin
 	server.Port = 465
 	server.KeepAlive = false
