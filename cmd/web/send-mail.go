@@ -33,14 +33,14 @@ func sendMsg(m models.MailData) {
 	server.ConnectTimeout = 10 * time.Second
 	server.SendTimeout = 10 * time.Second
 
+	// logging the credentials
+	log.Println(server.Host, server.Username, server.Password)
+
 	client, err := server.Connect()
 	if err != nil {
 		errorLog.Println(err)
 	}
-
-	// logging the credentials
-	log.Println(server.Host, server.Username, server.Password)
-
+	
 	email := mail.NewMSG()
 	email.SetFrom(m.From).AddTo(m.To).SetSubject(m.Subject)
 	if m.Template == "" {
